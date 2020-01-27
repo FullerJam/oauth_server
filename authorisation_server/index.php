@@ -1,4 +1,6 @@
 <?php
+use Psr\Http\Message\ServerRequestIntgit erface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
 
 // Include all the Slim dependencies. Composer creates an 'autoload.php' inside
 // the 'vendor' directory which will, in turn, include all required dependencies.
