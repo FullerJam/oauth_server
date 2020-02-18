@@ -1,5 +1,5 @@
 <?php
-use Psr\Http\Message\ServerRequestIntgit erface as Request;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
 // Include all the Slim dependencies. Composer creates an 'autoload.php' inside
@@ -14,7 +14,7 @@ $app = new \Slim\App;
 
 // $container['db'] = function() {
 
-//     $conn = new PDO("mysql:host=localhost;dbname=dftitutorials", "dftitutorials", "dftitutorials");
+//     $conn = new PDO("mysql:host=localhost;dbname="", "user", "pass");
 //     return $conn;
 // };
 
@@ -25,7 +25,7 @@ $accessTokenRepository = new AccessTokenRepository(); // instance of AccessToken
 $authCodeRepository = new AuthCodeRepository(); // instance of AuthCodeRepositoryInterface
 $refreshTokenRepository = new RefreshTokenRepository(); // instance of RefreshTokenRepositoryInterface
 
-$privateKey = 'file://path/to/private.key';
+$privateKey = '../private.key';
 //$privateKey = new CryptKey('file://path/to/private.key', 'passphrase'); // if private key has a pass phrase
 $encryptionKey = 'n8Joj0/sNX1PgY3XlOrIY+D0B+bZKcuo7ofGaans82k='; // generate 'openssl rand -base64 32' in console omit the 's
 
@@ -38,6 +38,8 @@ $server = new \League\OAuth2\Server\AuthorizationServer(
     $encryptionKey
 );
 
+
+
 $grant = new \League\OAuth2\Server\Grant\AuthCodeGrant(
      $authCodeRepository,
      $refreshTokenRepository,
@@ -46,13 +48,37 @@ $grant = new \League\OAuth2\Server\Grant\AuthCodeGrant(
 
 $grant->setRefreshTokenTTL(new \DateInterval('P1M')); // refresh tokens will expire after 1 month
 
-// Enable the authentication code grant on the server
+// Enable the client credentials grant on the server
 $server->enableGrantType(
-    $grant,
+    new \League\OAuth2\Server\Grant\ClientCredentialsGrant(),
     new \DateInterval('PT1H') // access tokens will expire after 1 hour
 );
 
 
+//client requests an access token
+$app->post('/access_token', function (ServerRequestInterface $request, ResponseInterface $response) use ($server) {
+
+    try {
+    
+        // Try to respond to the request
+        return $server->respondToAccessTokenRequest($request, $response);
+
+    } catch (\League\OAuth2\Server\Exception\OAuthServerException $exception) {
+    
+        // All instances of OAuthServerException can be formatted into a HTTP response
+        return $exception->generateHttpResponse($response);
+        
+    } catch (\Exception $exception) {
+        
+        // Unknown exception
+        $body = new Stream(fopen('php://temp', 'r+'));
+        $body->write($exception->getMessage());
+        return $response->withStatus(500)->withBody($body);
+    }
+});
+
+
+//client redirects the user to an authorization endpoint
 $app->get('/authorize', function (ServerRequestInterface $request, ResponseInterface $response) use ($server) {
    
     try {
@@ -92,33 +118,9 @@ $app->get('/authorize', function (ServerRequestInterface $request, ResponseInter
 });
 
 
-$app->post('/access_token', function (ServerRequestInterface $request, ResponseInterface $response) use ($server) {
-
-    try {
-    
-        // Try to respond to the request
-        return $server->respondToAccessTokenRequest($request, $response);
-
-    } catch (\League\OAuth2\Server\Exception\OAuthServerException $exception) {
-    
-        // All instances of OAuthServerException can be formatted into a HTTP response
-        return $exception->generateHttpResponse($response);
-        
-    } catch (\Exception $exception) {
-        
-        // Unknown exception
-        $body = new Stream(fopen('php://temp', 'r+'));
-        $body->write($exception->getMessage());
-        return $response->withStatus(500)->withBody($body);
-    }
-});
 
 
-// Setup a route (see below)
-// $app->get('/hello', function ($req, $res, array $args) {
-//     $res->getBody()->write('Hello World from Slim!');
-//     return $res;
-// });
+
 
 // Run the application
 $app->run();
