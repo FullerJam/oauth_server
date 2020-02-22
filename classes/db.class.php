@@ -1,19 +1,28 @@
 <?php
-class Database{
-    private $host ="localhost";
-    private $user ="root";
-    private $pwd ="";
-    private $dbName ="oauth2.0";
 
-    protected function connect(){
-        // data source name
-        $dsn = 'mysql:host='.$this->$host.';dbname='.$this->$dbName;
+class Db {
 
-        $pdo = new PDO($dsn,$this->$user, $this->pwd);
+    private $host = "localhost";
+    private $user = "root";
+    private $pwd = "";
+    private $dbName = "oauth2.0";
 
-        // connect with default attribute for how to pull out data. Associative array as default
-        $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    public function db_connect(){
+        try {
+            // data source name
+            $dsn = 'mysql:host='. $this->$host .';dbname='. $this->$dbName;
+            //PHP Data Objects
+            $pdo = new PDO($dsn,$this->$user, $this->pwd);
 
-        return $pdo;
+            // connect with default attribute for how to pull out data. Associative array as default
+            $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+            
+            return $pdo;
+        } catch (PDOException $error) {
+            echo "Error: ".$error->getMessage();
+        }
+
     }
 }
+
+?>
