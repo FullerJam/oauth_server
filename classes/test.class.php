@@ -6,7 +6,7 @@ class Test extends Db {
         $stmt = $this->db_connect()->query($sql);
 
         while($row = $stmt->fetch())/*fetch is declared in db.class.php*/{
-            echo $row;
+            echo $row['user'];
         }
     }
 }
