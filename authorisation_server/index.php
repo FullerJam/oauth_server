@@ -4,61 +4,76 @@ use Psr\Http\Message\ResponseInterface as Response;
 // Include all the Slim dependencies. Composer creates an 'autoload.php' inside
 // the 'vendor' directory which will, in turn, include all required dependencies.
 require '../vendor/autoload.php';
+require_once '../classes/repositories/ClientRepository.php';
+require_once '../classes/repositories/AccessTokenRepository.php';
+require_once '../classes/repositories/ScopeRepository.php';
+require_once '../classes/repositories/AuthCodeRepository.php';
+require_once '../classes/repositories/RefreshTokenRepository.php';
+require_once '../classes/repositories/ClientEntity.php';
+require_once '../classes/repositories/UserEntity.php';
+require_once '../classes/repositories/AccessTokenEntity.php';
+require_once '../classes/repositories/ScopeEntity.php';
+require_once '../classes/repositories/AuthCodeEntity.php';
+require_once '../classes/repositories/RefreshTokenEntity.php';
+
 
 
 // Create a new Slim App object. (v3 method)
 $app = new \Slim\App;
 
-// $container = $app->getContainer();
+$container = $app->getContainer();
 
-// $container['db'] = function() {
+$container['db'] = function() {
+    $conn = new PDO("mysql:host=localhost;dbname=oauth2.0", "root", "");
+    return $conn;
+};
 
-//     $conn = new PDO("mysql:host=localhost;dbname="", "user", "pass");
-//     return $conn;
-// };
+$container['authServer'] = function($container){
+    $db = $container->get('db');
 
-// Init our repositories
-$clientRepository = new ClientRepository(); // instance of ClientRepositoryInterface
-$scopeRepository = new ScopeRepository(); // instance of ScopeRepositoryInterface
-$accessTokenRepository = new AccessTokenRepository(); // instance of AccessTokenRepositoryInterface
-$authCodeRepository = new AuthCodeRepository(); // instance of AuthCodeRepositoryInterface
-$refreshTokenRepository = new RefreshTokenRepository(); // instance of RefreshTokenRepositoryInterface
+    // Init our repositories
+    $clientRepository = new ClientRepository($db); // instance of ClientRepositoryInterface
+    $scopeRepository = new ScopeRepository($db); // instance of ScopeRepositoryInterface
+    $accessTokenRepository = new AccessTokenRepository($db); // instance of AccessTokenRepositoryInterface
+    $authCodeRepository = new AuthCodeRepository($db); // instance of AuthCodeRepositoryInterface
+    $refreshTokenRepository = new RefreshTokenRepository($db); // instance of RefreshTokenRepositoryInterface
+    
+    $privateKey = '../private.key';
+    //$privateKey = new CryptKey('file://path/to/private.key', 'passphrase'); // if private key has a pass phrase
+    $encryptionKey = 'n8Joj0/sNX1PgY3XlOrIY+D0B+bZKcuo7ofGaans82k='; // generate 'openssl rand -base64 32' in console omit the 's
+    // Setup the authorization server
+    $server = new \League\OAuth2\Server\AuthorizationServer(
+        $clientRepository,
+        $accessTokenRepository,
+        $scopeRepository,
+        $privateKey,
+        $encryptionKey
+    );
 
-$privateKey = '../private.key';
-//$privateKey = new CryptKey('file://path/to/private.key', 'passphrase'); // if private key has a pass phrase
-$encryptionKey = 'n8Joj0/sNX1PgY3XlOrIY+D0B+bZKcuo7ofGaans82k='; // generate 'openssl rand -base64 32' in console omit the 's
+    $grant = new \League\OAuth2\Server\Grant\AuthCodeGrant(
+         $authCodeRepository,
+         $refreshTokenRepository,
+         new \DateInterval('PT10M') // authorization codes will expire after 10 minutes
+     );
+     
+    $grant->setRefreshTokenTTL(new \DateInterval('P1M')); // refresh tokens will expire after 1 month
 
-// Setup the authorization server
-$server = new \League\OAuth2\Server\AuthorizationServer(
-    $clientRepository,
-    $accessTokenRepository,
-    $scopeRepository,
-    $privateKey,
-    $encryptionKey
-);
-
-
-
-$grant = new \League\OAuth2\Server\Grant\AuthCodeGrant(
-     $authCodeRepository,
-     $refreshTokenRepository,
-     new \DateInterval('PT10M') // authorization codes will expire after 10 minutes
- );
-
-$grant->setRefreshTokenTTL(new \DateInterval('P1M')); // refresh tokens will expire after 1 month
-
-// Enable the client credentials grant on the server
-$server->enableGrantType(
-    new \League\OAuth2\Server\Grant\ClientCredentialsGrant(),
+    // Enable the authentication code grant on the server
+    $server->enableGrantType(
+    $grant,
     new \DateInterval('PT1H') // access tokens will expire after 1 hour
-);
+    );
+
+    return $server;
+};
+
 
 
 //client requests an access token
 $app->post('/access_token', function (ServerRequestInterface $request, ResponseInterface $response) use ($server) {
 
     try {
-    
+        
         // Try to respond to the request
         return $server->respondToAccessTokenRequest($request, $response);
 
