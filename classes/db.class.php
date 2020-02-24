@@ -20,7 +20,7 @@ Notice: Undefined variable: user in C:\xampp\htdocs\oauth_server\classes\db.clas
     public function db_connect(){
 
         //declared locally for now until i can consult tutor
-        $host = "localhost"; 
+        $host = "localhost";
         $user = "root";
         $pwd = "";
         $dbName = "oauth2.0";
@@ -32,7 +32,7 @@ Notice: Undefined variable: user in C:\xampp\htdocs\oauth_server\classes\db.clas
             $pdo = new PDO($dsn, $user, $pwd);
 
             // connect with default attribute for how to pull out data. Associative array as default
-            $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+            // $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
             
             return $pdo;
             
