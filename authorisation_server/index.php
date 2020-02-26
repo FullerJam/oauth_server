@@ -95,6 +95,7 @@ $app->get('/authorize', function (ServerRequestInterface $request, ResponseInter
    
     try {
         $queryParams = $req->getQueryParams(); //flow part one params [response_type, client_id, redirect_uri, scope, state] -> https://oauth2.thephpleague.com/authorization-server/auth-code-grant/
+        // $queryParams["response_type"]
         //getQuery() returns query as string - getQueryParams() returns associative array of those params -> http://www.slimframework.com/docs/v3/objects/request.html
 
         // Validate the HTTP request and return an AuthorizationRequest object.
