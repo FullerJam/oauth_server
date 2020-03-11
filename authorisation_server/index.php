@@ -91,12 +91,12 @@ $app->post('/access_token', function (ServerRequestInterface $request, ResponseI
 
 
 //client redirects the user to an authorization endpoint
-$app->get('/authorize', function (ServerRequestInterface $request, ResponseInterface $response) use ($server) {
+$app->get('/authorise', function (ServerRequestInterface $request, ResponseInterface $response) use ($server) {
    
     try {
+        //getQuery() returns query as string - getQueryParams() returns associative array of those params -> http://www.slimframework.com/docs/v3/objects/request.html
         $queryParams = $req->getQueryParams(); //flow part one params [response_type, client_id, redirect_uri, scope, state] -> https://oauth2.thephpleague.com/authorization-server/auth-code-grant/
         // $queryParams["response_type"]
-        //getQuery() returns query as string - getQueryParams() returns associative array of those params -> http://www.slimframework.com/docs/v3/objects/request.html
 
         // Validate the HTTP request and return an AuthorizationRequest object.
         $authRequest = $server->validateAuthorizationRequest($request);
@@ -117,23 +117,25 @@ $app->get('/authorize', function (ServerRequestInterface $request, ResponseInter
             </head>
             <body>
                 <h1>Welcome to the authorisation server login</h1>
-                <form action='localhost/oauth_server/authorisation_server/login?response_type=".$var."&client_id=".$var."&redirect_uri=".$var."&scope=".$var."&state=".$var."' method='post'>
+                <form action='localhost/oauth_server/authorisation_server/login' method='post'>
                    <div class='form-wrapper' style='max-width:320px;margin:0 auto;'>
                         <label for='usr'>Username</label>
                         <input type='text' placeholder='Enter Username' name='usr' required>
-                        <label for='psw'>Password</label>
+                        <label for='psd'>Password</label>
                         <input type='password' placeholder='Enter Password' name='pwd' required>
+                        <input type='hidden' id='' name='' value='".$queryParams["response_type"]."'>
+                        <input type='hidden' id='' name='' value='".$queryParams["client_id"]."'>
+                        <input type='hidden' id='' name='' value='".$queryParams["redirect_uri"]."'>
+                        <input type='hidden' id='' name='' value='".$queryParams["scope"]."'>
+                        <input type='hidden' id='' name='' value='".$queryParams["state"]."'>
                         <button type='submit'>Login</button>
                     </div>
                 </form>
             </body>
             </html>
-            "
+            ";
         } else {
-            //?
-        };
-
-        
+              
         // Once the user has logged in set the user on the AuthorizationRequest
         $authRequest->setUser(new UserEntity()); // an instance of UserEntityInterface
         
@@ -147,7 +149,9 @@ $app->get('/authorize', function (ServerRequestInterface $request, ResponseInter
         // Return the HTTP redirect response
         return $server->completeAuthorizationRequest($authRequest, $response);
         
-    } catch (OAuthServerException $exception) {
+        } 
+    }
+    catch (OAuthServerException $exception) {p
     
         // All instances of OAuthServerException can be formatted into a HTTP response
         return $exception->generateHttpResponse($response);
@@ -162,6 +166,34 @@ $app->get('/authorize', function (ServerRequestInterface $request, ResponseInter
     }
 });
 
+$app->post('/login', function (ServerRequestInterface $request, ResponseInterface $response) use ($server) {
+
+    try{
+        session_start();
+        $postData = $req->getParsedBody();
+        $usr = $postData["usr"];
+        $pwd = $postData["pwd"];
+        $db = new Db();
+        $sql = "SELECT * from users WHERE user=?";
+        $results = $this->db_connect()->prepare($sql);
+        $results->execute([$usr]);
+        $row = $results->fetch();
+
+        if($row != false){
+            if ($pw == $row["password"]){
+                $_SESSION["authorised_user"] = $usr;
+                header("Location:localhost/oauth_server/authorisation_server/authorise");
+            } else {
+                throw new Exception("No user registered by those credentials")
+            }
+        }
+    } 
+    catch (Exception $e) {
+    echo $e->getMessage();
+    header("refresh:5;url=localhost/oauth_server/authorisation_server/authorise");
+    }
+
+});
 
 
 
