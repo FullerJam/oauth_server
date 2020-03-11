@@ -1,6 +1,6 @@
 <?php
 
-include('defines.php');
+//include('defines.php');
 
 class Db {
     /*not working for some reason 
@@ -20,7 +20,6 @@ Notice: Undefined variable: user in C:\xampp\htdocs\oauth_server\classes\db.clas
    private $dbName = "oauth2.0";
 
     public function __construct($host, $user, $pwd, $dbName) {
- //declared locally for now until i can consult tutor
         $this->host = $host;
         $this->user = $user;
         $this->pwd = "";
