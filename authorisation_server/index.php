@@ -24,13 +24,14 @@ $app = new \Slim\App;
 
 $container = $app->getContainer();
 
-// $container['db'] = function() {
-//     $conn = new PDO("mysql:host=localhost;dbname=oauth2.0", "root", "");
-//     return $conn;
-// };
+$conn = new PDO("mysql:host=localhost;dbname=oauth2.0", "root", "");
+
+$container['db'] = function() use($conn) {
+    return $conn;
+};
 
 // Init our repositories
-$clientRepository = new ClientRepository(); // instance of ClientRepositoryInterface
+$clientRepository = new ClientRepository($conn); // instance of ClientRepositoryInterface
 $scopeRepository = new ScopeRepository(); // instance of ScopeRepositoryInterface
 $accessTokenRepository = new AccessTokenRepository(); // instance of AccessTokenRepositoryInterface
 $authCodeRepository = new AuthCodeRepository(); // instance of AuthCodeRepositoryInterface
