@@ -3,11 +3,16 @@
 use League\OAuth2\Server\Entities\AuthCodeEntityInterface;
 use League\OAuth2\Server\Repositories\AuthCodeRepositoryInterface;
 use OAuth2ServerExamples\Entities\AuthCodeEntity;
-//include database
-require_once '../classes/db.class.php';
+
 
 class AuthCodeRepository implements AuthCodeRepositoryInterface
 {
+
+    protected $conn;
+
+    public function __construct($conn){
+        $this->conn = $conn;
+    }
     /**
      * {@inheritdoc}
      */
@@ -18,7 +23,7 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
         
         $sql = "INSERT INTO authorisation_codes(authorisation_code, code_expires, user_id, scope, client_id) VALUES (?,?,?,?,?)"; //SQL statement
 
-        $stmt = $this->db_connect()->prepare($sql); //prepared statement, use TokenInterface extend from AuthCodeEntityInterface. Token interface functions to retrieve query string data    
+        $stmt = $this->conn->prepare($sql); //prepared statement, use TokenInterface extend from AuthCodeEntityInterface. Token interface functions to retrieve query string data    
 
         $stmt->execute([$authCodeEntity->getIdentifier(), $authCodeEntity->getExpiryDateTime()->getTimestamp(), $authCodeEntity->getUserIdentifier(), $suppliedScopes, $authCodeEntity->getClient()->getIdentifier()]);    
     }
@@ -29,7 +34,8 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
     public function revokeAuthCode($codeId)
     {
         // Some logic to revoke the auth code in a database
-        $stmt = $this->db_connect()->prepare("UPDATE authorisation_codes SET revoked=true WHERE authorisation_code=?");
+        $sql = "UPDATE authorisation_codes SET revoked=true WHERE authorisation_code=?";
+        $stmt = $this->conn->prepare($sql);
         $stmt->execute([$codeId]);
 
     }
@@ -41,9 +47,9 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
     {
         // $codeId="1; UPDATE users SET password='cracked' WHERE username='admin
         $sql = "SELECT revoked FROM oauth_auth_codes WHERE auth_code=$codeId";
-        $stmt = $this->db_connect()->query($sql);
+        $stmt = $this->conn->prepare($sql);
         $row = $stmt->fetch();
-        return $result[
+        return $result;
         // The auth code has not been revoked
         //return false //?not sure why they would be returning false?
     }

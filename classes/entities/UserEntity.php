@@ -1,6 +1,7 @@
 <?php
 
 use League\OAuth2\Server\Entities\UserEntityInterface;
+use League\OAuth2\Server\Entities\Traits\EntityTrait;
 
 class UserEntity implements UserEntityInterface
 {
@@ -9,8 +10,8 @@ class UserEntity implements UserEntityInterface
      *
      * @return mixed
      */
-    public function getIdentifier()
+    public function getIdentifier($id)
     {
-        return 1;
+        return $id;
     }
 }
