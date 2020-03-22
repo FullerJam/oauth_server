@@ -67,7 +67,7 @@ $server->enableGrantType(
 );
 
 //client requests an access token
-$app->post('/access_token', function (ServerRequestInterface $request, ResponseInterface $response) use ($server) {
+$app->post('/access_token', function(Request $req, Response $res, array $args) {
 
     try {
 
@@ -86,20 +86,22 @@ $app->post('/access_token', function (ServerRequestInterface $request, ResponseI
         $body->write($exception->getMessage());
         return $response->withStatus(500)->withBody($body);
     }
-});
+})->setName('accessToken');
 
 //client redirects the user to an authorization endpoint
-$app->get('/authorise', function (ServerRequestInterface $request, ResponseInterface $response) use ($server, $view) {
+$app->get('/authorise', function(Request $req, Response $res, array $args) {
 
     try {
         //getQuery() returns query as string - getQueryParams() returns associative array of those params -> http://www.slimframework.com/docs/v3/objects/request.html
         $queryParams = $req->getQueryParams(); //flow part one params [response_type, client_id, redirect_uri, scope, state] -> https://oauth2.thephpleague.com/authorization-server/auth-code-grant/
         // $queryParams["response_type"]
-        $response_type = $queryParams["response_type"];
-        $client_id = $queryParams["client_id"];
-        $r_uri = $queryParams["redirect_uri"];
-        $scope = $queryParams["scope"];
-        $state = $queryParams["state"];
+        //save all params to session variables
+        session_start();
+        $_SESSION["res_type"] = $queryParams["response_type"];
+        $_SESSION["client_id"] = $queryParams["client_id"];
+        $_SESSION["redirect_uri"] = $queryParams["redirect_uri"];
+        $_SESSION["scope"] = $queryParams["scope"];
+        $_SESSION["state"] = $queryParams["state"];
 
         // Validate the HTTP request and return an AuthorizationRequest object.
         $authRequest = $server->validateAuthorizationRequest($request);
@@ -114,13 +116,7 @@ $app->get('/authorise', function (ServerRequestInterface $request, ResponseInter
             $res = $view->render($res, 'login.phtml');
             return $res;
         } else {
-            //user has authorised save all params to session variables
-            session_start();
-            $_SESSION["res_type"] = $response_type;
-            $_SESSION["client_id"] = $client_id;
-            $_SESSION["redirect_uri"] = $r_uri;
-            $_SESSION["scope"] = $scope;
-            $_SESSION["state"] = $state;
+            
 
             // Once the user has logged in set the user on the AuthorizationRequest
             $authRequest->setUser(new UserEntity($_SESSION['authorised_user'])); // an instance of UserEntityInterface
@@ -150,9 +146,9 @@ $app->get('/authorise', function (ServerRequestInterface $request, ResponseInter
         return $response->withStatus(500)->withBody($body);
 
     }
-});
+})->setName('authorise');
 
-$app->post('/login', function (ServerRequestInterface $request, ResponseInterface $response) use ($server) {
+$app->post('/login', function(Request $req, Response $res, array $args) {
 
     try {
         session_start();
@@ -161,24 +157,45 @@ $app->post('/login', function (ServerRequestInterface $request, ResponseInterfac
         $pwd = $postData["pwd"];
 
         $sql = "SELECT * from users WHERE user=?";
-        $results = $this->db->prepare($sql);
-        $results->execute([$usr]);
-        $row = $results->fetch();
+        $ps = $this->db->prepare($sql);
+        $ps->execute([$usr]);
+        $row = $ps->fetch();
 
         if ($row != false) {
             if ($pwd == $row["password"]) {
                 $_SESSION["authorised_user"] = $row["id"]; // set authorised user session variable equal to id so it can be used in UserEntity class
-                header("Location:localhost/oauth_server/authorisation_server/authorise");
+
+                return $res->withRedirect($this->router->pathFor('scopeAuthorisation'));
             } else {
                 throw new Exception("No user registered by those credentials");
             }
         }
     } catch (Exception $e) {
         echo $e->getMessage();
-        header("refresh:5;url=localhost/oauth_server/authorisation_server/authorise");
+        header("refresh:5;url=localhost/oauth_server/authorisation_server/login");
     }
 
-});
+})->setName('login');
+
+$app->get('/scope_authorisation', function(Request $req, Response $res, array $args) {
+    if(!isset($_SESSION["authorised_user"])){ //if user has not logged in redirect to login view else..
+        $res = $view->render($res, 'login.phtml');
+        return $res;
+    } else {
+        $sql = "SELECT name FROM oauth_clients where id=?";
+        $ps = $this->db->prepare($sql);
+        $ps->execute([$_SESSION["authorised_user"]]);
+        $clientApplication = $ps->fetch();
+        $_SESSION["clientApplication"] = $clientApplication; // retrieve client application name & save to session for View message
+        $allscopes = $scopeRepository->returnAllScopes();
+        $res = $view->render($res, "scope_auth.phtml", $allscopes); //render accepts array as an argument
+    }
+
+})->setName('scopeAuthorisation');
+
+$app->get('/handle_scopes', function(Request $req, Response $res, array $args) {
+
+})->setName('handle_scopes');
 
 // Run the application
 $app->run();
