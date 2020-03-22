@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scope authorisation</title>
+</head>
+
+<body>
+
+    <div class="wrapper" style="max-width:320px;margin:0 auto;">
+        <h1>Oauth scope authentication!</h1>
+        <h4><?php echo "".$_SESSION["clientApplication"].""; ?> Would like access to your account please provide permission for the requested scopes below </h4>
+
+        <form method="post" action="localhost/oauth_server/authorisation_server/handle_scopes">
+            <?php
+            foreach($allScopes as $scope) {
+                echo "<input type='checkbox' name='scopes_array' value='$scope[id]' />$scope[description]<br />";
+            }
+            ?>
+            <input type="submit" name="submit" value="submit" />
+        </form>
+    </div>
+
+</body>
+
+</html>
