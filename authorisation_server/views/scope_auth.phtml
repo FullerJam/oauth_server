@@ -11,9 +11,10 @@
 
     <div class="wrapper" style="max-width:320px;margin:0 auto;">
         <h1>Oauth scope authentication!</h1>
-        <h4><?php echo "".$_SESSION["clientApplication"].""; ?> Would like access to your account please provide permission for the requested scopes below </h4>
+        <h4><?php echo "".$_SESSION["clientApplication"].""; ?> would like access to your account details please provide permission for the requested permissions below </h4>
 
         <form method="post" action="localhost/oauth_server/authorisation_server/handle_scopes">
+        <label for="scopes_array">Approve permissions</label><br>
             <?php
             foreach($allScopes as $scope) {
                 echo "<input type='checkbox' name='scopes_array' value='$scope[id]' />$scope[description]<br />";
