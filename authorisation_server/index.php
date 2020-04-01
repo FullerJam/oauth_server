@@ -193,8 +193,19 @@ $app->get('/scope_authorisation', function(Request $req, Response $res, array $a
 
 })->setName('scopeAuthorisation');
 
-$app->get('/handle_scopes', function(Request $req, Response $res, array $args) {
-
+$app->post('/handle_scopes', function(Request $req, Response $res, array $args) {
+    $post = $req->getParsedBody();
+    if ($post["1"] == "checked" && isset($_SESSION["authorised_user"]) ){
+        session_start();
+        $_SESSION["read_auth"];
+        if($post["2"] == "checked"){
+            $_SESSION["write_auth"];
+        };
+        return $res->withRedirect($this->router->pathFor('authorise'));
+    } else {
+        $error = "You need to atleast authorise read access to use this service";
+        return $res->withRedirect($this->router->pathFor('scopeAuthorisation'));
+    }
 })->setName('handle_scopes');
 
 // Run the application
