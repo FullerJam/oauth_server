@@ -31,7 +31,7 @@ $container['db'] = function () use ($conn) {
     return $conn;
 };
 
-// Init our repositories
+// Init our repositories pass database through param
 $clientRepository = new ClientRepository($conn); // instance of ClientRepositoryInterface
 $scopeRepository = new ScopeRepository($conn); // instance of ScopeRepositoryInterface
 $accessTokenRepository = new AccessTokenRepository($conn); // instance of AccessTokenRepositoryInterface
@@ -93,30 +93,31 @@ $app->get('/authorise', function(Request $req, Response $res, array $args) {
 
     try {
         //getQuery() returns query as string - getQueryParams() returns associative array of those params -> http://www.slimframework.com/docs/v3/objects/request.html
-        $queryParams = $req->getQueryParams(); //flow part one params [response_type, client_id, redirect_uri, scope, state] -> https://oauth2.thephpleague.com/authorization-server/auth-code-grant/
-        // $queryParams["response_type"]
+        // $queryParams = $req->getQueryParams(); //flow part one params [response_type, client_id, redirect_uri, scope, state] -> https://oauth2.thephpleague.com/authorization-server/auth-code-grant/
+    
         //save all params to session variables
         session_start();
-        $_SESSION["res_type"] = $queryParams["response_type"];
-        $_SESSION["client_id"] = $queryParams["client_id"];
-        $_SESSION["redirect_uri"] = $queryParams["redirect_uri"];
-        $_SESSION["scope"] = $queryParams["scope"];
-        $_SESSION["state"] = $queryParams["state"];
+        $_SESSION["oauth_qp"] = [];
+        $qpFields = ["response_type", "client_id", "redirect_uri", "state"]; // ignoring scope as returning all scopes
+        foreach($qpFields as $qpField){
+            $_SESSION["oauth_qp"][$qpField] = htmlspecialchars($_GET[$field]);
+        }
 
-        // Validate the HTTP request and return an AuthorizationRequest object.
-        $authRequest = $server->validateAuthorizationRequest($request);
+
         // found here - vendor\league\oauth2-server\src\AuthorizationServer.php
         //dont think i have to do anything
-
+        
         // The auth request object can be serialized and saved into a user's session.
         // You will probably want to redirect the user at this point to a login endpoint.
-
+        
         if (!isset($_SESSION['authorised_user'])) {
             //login --
             $res = $view->render($res, 'login.phtml');
             return $res;
         } else {
             
+            // Validate the HTTP request and return an AuthorizationRequest object.
+            $authRequest = $server->validateAuthorizationRequest($request);
 
             // Once the user has logged in set the user on the AuthorizationRequest
             $authRequest->setUser(new UserEntity($_SESSION['authorised_user'])); // an instance of UserEntityInterface
@@ -154,16 +155,16 @@ $app->post('/login', function(Request $req, Response $res, array $args) {
         session_start();
         $postData = $req->getParsedBody();
         $usr = $postData["usr"];
-        $pwd = $postData["pwd"];
+        $pwd = $postData["pwd"]; // retrieve login details
 
         $sql = "SELECT * from users WHERE user=?";
         $ps = $this->db->prepare($sql);
         $ps->execute([$usr]);
-        $row = $ps->fetch();
+        $row = $ps->fetch(); // find user that matches posted credentials
 
         if ($row != false) {
             if ($pwd == $row["password"]) {
-                $_SESSION["authorised_user"] = $row["id"]; // set authorised user session variable equal to id so it can be used in UserEntity class
+                $_SESSION["logged_in_user"] = $row["id"]; // set authorised user session variable equal to id so it can be used in UserEntity class
 
                 return $res->withRedirect($this->router->pathFor('scopeAuthorisation'));
             } else {
@@ -178,35 +179,47 @@ $app->post('/login', function(Request $req, Response $res, array $args) {
 })->setName('login');
 
 $app->get('/scope_authorisation', function(Request $req, Response $res, array $args) {
-    if(!isset($_SESSION["authorised_user"])){ //if user has not logged in redirect to login view else..
+    if(!isset($_SESSION["logged_in_user"])){ //if user has not logged in redirect to login view else..
         $res = $view->render($res, 'login.phtml');
         return $res;
     } else {
         $sql = "SELECT name FROM oauth_clients where id=?";
-        $ps = $this->db->prepare($sql);
-        $ps->execute([$_SESSION["authorised_user"]]);
+        $ps = $this->db->prepare($sql); //ps preparedstatement
+        $ps->execute([$_SESSION["logged_in_user"]]);
         $clientApplication = $ps->fetch();
         $_SESSION["clientApplication"] = $clientApplication; // retrieve client application name & save to session for View message
+        //real Oauth server would use Scopes session variable to set requested scopes from client in scope_auth view. just a demo
         $allscopes = $scopeRepository->returnAllScopes();
-        $res = $view->render($res, "scope_auth.phtml", $allscopes); //render accepts array as an argument
+        return $res = $view->render($res, "scope_auth.phtml", $allscopes); //render accepts array as an argument
     }
 
 })->setName('scopeAuthorisation');
 
 $app->post('/handle_scopes', function(Request $req, Response $res, array $args) {
-    $post = $req->getParsedBody();
-    if ($post["1"] == "checked" && isset($_SESSION["authorised_user"]) ){
+    if (isset($_SESSION["logged_in_user"]) && ($_POST["ApproveScopes"] == "true")  ){ //check that user has atleast provided write permission & is logged in
+        $scopesArray = $_POST["scopes"];
+        
         session_start();
-        $_SESSION["read_auth"];
-        if($post["2"] == "checked"){
-            $_SESSION["write_auth"];
-        };
-        return $res->withRedirect($this->router->pathFor('authorise'));
+
+        $_SESSION['authorised_user'] = $_SESSION["logged_in_user"]; // set user as authorised
+        
+        $_SESSION["oauth_qp"]["scope"] = implode(" ", $scopesArray);
+        $queryParams = http_build_query($_SESSION["oauth_qp"]);
+        unset($_SESSION["oauth_qp"]);
+
+        return $res->withRedirect($this->router->pathFor('authorise')."?$queryParams");
     } else {
         $error = "You need to atleast authorise read access to use this service";
-        return $res->withRedirect($this->router->pathFor('scopeAuthorisation'));
+        // return $res->withRedirect($this->router->pathFor('scopeAuthorisation')); // changed out for $view->render as I wasnt passing $error
+        return $res = $view->render($res, "scope_auth.phtml", [$error]);
     }
 })->setName('handle_scopes');
 
 // Run the application
 $app->run();
+
+// $_SESSION["res_type"] = $queryParams["response_type"];
+//         $_SESSION["client_id"] = $queryParams["client_id"];
+//         $_SESSION["redirect_uri"] = $queryParams["redirect_uri"];
+//         $_SESSION["scope"] = $queryParams["scope"];
+//         $_SESSION["state"] = $queryParams["state"];
