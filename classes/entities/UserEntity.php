@@ -5,7 +5,8 @@ use League\OAuth2\Server\Entities\Traits\EntityTrait;
 
 class UserEntity implements UserEntityInterface
 {
-    
+    use EntityTrait;
+
     protected $conn;
 
     public function __construct($conn){
