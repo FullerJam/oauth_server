@@ -8,13 +8,13 @@ require '../vendor/autoload.php';
 // Create a new Slim App object. (v3 method)
 $app = new \Slim\App;
 
-// $container = $app->getContainer();
+$container = $app->getContainer();
 
-// $container['db'] = function() {
+$container['db'] = function() {
 
-//     $conn = new PDO("mysql:host=localhost;dbname=dftitutorials", "dftitutorials", "dftitutorials");
-//     return $conn;
-// };
+    $conn = new PDO("mysql:host=localhost;dbname=oauth2.0", "root", "");
+    return $conn;
+};
 
 //Setup up routes
 // $app->get('/hello', function ($req, $res, array $args) {
