@@ -34,7 +34,7 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
     public function revokeAuthCode($codeId)
     {
         // Some logic to revoke the auth code in a database
-        $sql = "UPDATE authorisation_codes SET revoked=true WHERE authorisation_code=?";
+        $sql = "UPDATE authorisation_codes SET is_revoked=true WHERE authorisation_code=?";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$codeId]);
 
@@ -45,13 +45,10 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
      */
     public function isAuthCodeRevoked($codeId)
     {
-        // $codeId="1; UPDATE users SET password='cracked' WHERE username='admin
-        $sql = "SELECT revoked FROM oauth_auth_codes WHERE auth_code=$codeId";
+        $sql = "SELECT revoked FROM authorisation_codes WHERE auth_code=$codeId";
         $stmt = $this->conn->prepare($sql);
         $row = $stmt->fetch();
-        return $result;
-        // The auth code has not been revoked
-        //return false //?not sure why they would be returning false?
+        return $row["is_revoked"];
     }
 
     /**
