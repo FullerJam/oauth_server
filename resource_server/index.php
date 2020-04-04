@@ -8,19 +8,36 @@ require '../vendor/autoload.php';
 // Create a new Slim App object. (v3 method)
 $app = new \Slim\App;
 
-$container = $app->getContainer();
+// $container = $app->getContainer();
 
-$container['db'] = function() {
+$conn = new PDO("mysql:host=localhost;dbname=oauth2.0", "root", "");
 
-    $conn = new PDO("mysql:host=localhost;dbname=oauth2.0", "root", "");
-    return $conn;
-};
+// $container['db'] = function () use ($conn) {
+//     return $conn;
+// };
 
-//Setup up routes
-// $app->get('/hello', function ($req, $res, array $args) {
-//     $res->getBody()->write('Hello World from Slim!');
-//     return $res;
-// });
+$publicKeyPath = '..\authorisation_server\public.key';
 
+// Setup the authorization server
+$server = new \League\OAuth2\Server\ResourceServer(
+    $accessTokenRepository,
+    $publicKeyPath
+);
+
+
+new \League\OAuth2\Server\Middleware\ResourceServerMiddleware($server);
+
+// Setup up routes
+$app->get('/read', function ($req, $res, array $args) use($conn) {
+    $res->getBody()->write('Read permissions route');
+    return $res;
+});
+
+$app->get('/readwrite', function ($req, $res, array $args) use($conn) {
+    $res->getBody()->write('Read & Write permissions route');
+    return $res;
+});
+
+jsl
 // Run the application
 $app->run();

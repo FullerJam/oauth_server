@@ -7,6 +7,12 @@ use OAuth2ServerExamples\Entities\AccessTokenEntity;
 
 class AccessTokenRepository implements AccessTokenRepositoryInterface
 {
+
+    protected $conn;
+
+    public function __construct($conn){
+        $this->conn = $conn;
+    }
     /**
      * {@inheritdoc}
      */
