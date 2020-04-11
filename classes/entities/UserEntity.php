@@ -8,17 +8,19 @@ class UserEntity implements UserEntityInterface
     use EntityTrait;
 
     protected $conn;
+    public $id;
 
-    public function __construct($conn){
+    public function __construct($id, $conn){
         $this->conn = $conn;
+        $this->id = $id;
     }
     /**
      * Return the user's identifier.
      *
      * @return mixed
      */
-    public function getIdentifier($id)
+    public function getIdentifier()
     {
-        return $id;
+        return $this->id;
     }
 }

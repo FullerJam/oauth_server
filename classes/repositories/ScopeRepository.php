@@ -3,7 +3,7 @@ use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Repositories\ScopeRepositoryInterface;
 use OAuth2ServerExamples\Entities\ScopeEntity;
 
-class ScopeRepository implements ScopeRepositoryInterface
+abstract class ScopeRepository implements ScopeRepositoryInterface
 {
     protected $conn;
 

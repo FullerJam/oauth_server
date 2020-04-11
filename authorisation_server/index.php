@@ -7,13 +7,13 @@ require_once '../classes/repositories/ClientRepository.php';
 require_once '../classes/repositories/AccessTokenRepository.php';
 require_once '../classes/repositories/ScopeRepository.php';
 require_once '../classes/repositories/AuthCodeRepository.php';
-require_once '../classes/repositories/RefreshTokenRepository.php';
-require_once '../classes/repositories/ClientEntity.php';
-require_once '../classes/repositories/UserEntity.php';
-require_once '../classes/repositories/AccessTokenEntity.php';
-require_once '../classes/repositories/ScopeEntity.php';
-require_once '../classes/repositories/AuthCodeEntity.php';
-require_once '../classes/repositories/RefreshTokenEntity.php';
+// require_once '../classes/repositories/RefreshTokenRepository.php';
+require_once '../classes/entities/ClientEntity.php';
+require_once '../classes/entities/UserEntity.php';
+require_once '../classes/entities/AccessTokenEntity.php';
+require_once '../classes/entities/ScopeEntity.php';
+require_once '../classes/entities/AuthCodeEntity.php';
+require_once '../classes/entities/RefreshTokenEntity.php';
 
 //include database
 require_once '../classes/db.class.php';
@@ -36,7 +36,7 @@ $clientRepository = new ClientRepository($conn); // instance of ClientRepository
 $scopeRepository = new ScopeRepository($conn); // instance of ScopeRepositoryInterface
 $accessTokenRepository = new AccessTokenRepository($conn); // instance of AccessTokenRepositoryInterface
 $authCodeRepository = new AuthCodeRepository($conn); // instance of AuthCodeRepositoryInterface
-$refreshTokenRepository = new RefreshTokenRepository($conn); // instance of RefreshTokenRepositoryInterface
+// $refreshTokenRepository = new RefreshTokenRepository($conn); // instance of RefreshTokenRepositoryInterface
 
 $privateKey = '../private.key'; //private key file, added to git ignore
 
@@ -54,7 +54,7 @@ $server = new \League\OAuth2\Server\AuthorizationServer(
 
 $grant = new \League\OAuth2\Server\Grant\AuthCodeGrant(
     $authCodeRepository,
-    $refreshTokenRepository,
+    // $refreshTokenRepository,
     new \DateInterval('PT10M') // authorization codes will expire after 10 minutes
 );
 
