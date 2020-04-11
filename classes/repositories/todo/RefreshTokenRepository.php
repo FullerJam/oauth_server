@@ -6,6 +6,7 @@ use OAuth2ServerExamples\Entities\RefreshTokenEntity;
 
 class RefreshTokenRepository implements RefreshTokenRepositoryInterface
 {
+    
     /**
      * {@inheritdoc}
      */

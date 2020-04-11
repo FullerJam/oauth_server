@@ -38,6 +38,6 @@ $app->get('/readwrite', function ($req, $res, array $args) use($conn) {
     return $res;
 });
 
-jsl
+
 // Run the application
 $app->run();

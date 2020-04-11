@@ -14,12 +14,12 @@
         <h4><?php echo "".$_SESSION["clientApplication"].""; ?> would like access to your account details please provide permission for the requested permissions below </h4>
         <p><?php echo $error[0] ?></p>
 
-        <form method="post" action="localhost/oauth_server/authorisation_server/handle_scopes">
+        <form method="post" action="localhost/oauth/oauth_server/authorisation_server/handle_scopes">
         <label for="scopes_array">Approve permissions</label><br>
             <?php
             foreach($allScopes as $scope) {
                 echo "<input type='checkbox' checked='checked' name='scopes[]' value='$scope[id]' />$scope[description]<br />";
-            }
+            } //adding name as scopes[] returns an array in post
             ?>
             <input type="submit" name="ApproveScopes" value="true" />
         </form>
