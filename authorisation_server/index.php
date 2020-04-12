@@ -15,13 +15,14 @@ require_once '../classes/entities/ScopeEntity.php';
 require_once '../classes/entities/AuthCodeEntity.php';
 require_once '../classes/entities/RefreshTokenEntity.php';
 
-//include database
-require_once '../classes/db.class.php';
 
 // Create a new Slim App object. (v3 method)
 $app = new \Slim\App;
 // php renderer object for phtml
-$view = new \Slim\Views\PhpRenderer('views');
+// $view = new \Slim\Views\PhpRenderer('views');
+$container['view'] = function ($container) {
+    return new \Slim\Views\PhpRenderer('./views/');
+};
 
 $container = $app->getContainer();
 

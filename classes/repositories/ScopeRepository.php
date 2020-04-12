@@ -3,7 +3,7 @@ use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Repositories\ScopeRepositoryInterface;
 use OAuth2ServerExamples\Entities\ScopeEntity;
 
-abstract class ScopeRepository implements ScopeRepositoryInterface
+class ScopeRepository implements ScopeRepositoryInterface
 {
     protected $conn;
 
@@ -18,46 +18,46 @@ abstract class ScopeRepository implements ScopeRepositoryInterface
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // /**
-    //  * {@inheritdoc}
-    //  */
-    // public function getScopeEntityByIdentifier($scopeIdentifier)
-    // {
-    //     $scopes = [
-    //         'basic' => [
-    //             'description' => 'Basic details about you',
-    //         ],
-    //         'email' => [
-    //             'description' => 'Your email address',
-    //         ],
-    //     ];
+    /**
+     * {@inheritdoc}
+     */
+    public function getScopeEntityByIdentifier($scopeIdentifier)
+    {
+        $scopes = [
+            'basic' => [
+                'description' => 'Basic details about you',
+            ],
+            'email' => [
+                'description' => 'Your email address',
+            ],
+        ];
 
-    //     if (\array_key_exists($scopeIdentifier, $scopes) === false) {
-    //         return;
-    //     }
+        if (\array_key_exists($scopeIdentifier, $scopes) === false) {
+            return;
+        }
 
-    //     $scope = new ScopeEntity();
-    //     $scope->setIdentifier($scopeIdentifier);
+        $scope = new ScopeEntity();
+        $scope->setIdentifier($scopeIdentifier);
 
-    //     return $scope;
-    // }
+        return $scope;
+    }
 
-    // /**
-    //  * {@inheritdoc}
-    //  */
-    // public function finalizeScopes(
-    //     array $scopes,
-    //     $grantType,
-    //     ClientEntityInterface $clientEntity,
-    //     $userIdentifier = null
-    // ) {
-    //     // Example of programatically modifying the final scope of the access token
-    //     if ((int) $userIdentifier === 1) {
-    //         $scope = new ScopeEntity();
-    //         $scope->setIdentifier('email');
-    //         $scopes[] = $scope;
-    //     }
+    /**
+     * {@inheritdoc}
+     */
+    public function finalizeScopes(
+        array $scopes,
+        $grantType,
+        ClientEntityInterface $clientEntity,
+        $userIdentifier = null
+    ) {
+        // Example of programatically modifying the final scope of the access token
+        if ((int) $userIdentifier === 1) {
+            $scope = new ScopeEntity();
+            $scope->setIdentifier('email');
+            $scopes[] = $scope;
+        }
 
-    //     return $scopes;
-    // }
+        return $scopes;
+    }
 }

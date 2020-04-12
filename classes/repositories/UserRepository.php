@@ -17,10 +17,10 @@ class UserRepository implements UserRepositoryInterface
     public function getUserEntityByUserCredentials($username,$password,$grantType,ClientEntityInterface $clientEntity) {
         $sql = "SELECT password, id FROM users WHERE username=? AND approved_grant_types=?";
         $stmt = $this->conn->prepare($sql);
-        $stmt->execute([$username,$grantType]);
+        $row = $stmt->execute([$username,$grantType]);
 
         if ($row && $row["password" == $password]) {
-            return new UserEntity($row["id"]);//pass id for get identifier
+            return new UserEntity($row["id"]);//pass id for getIdentifier()
         } else {
             null;
         }
