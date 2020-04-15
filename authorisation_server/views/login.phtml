@@ -1,20 +1,23 @@
 <!DOCTYPE html>
-<html lang='en'>
+<html lang="en">
 <head>
-    <meta charset='UTF-8'>
-    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oauth Login</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 </head>
 <body>
-    <h1>Welcome to the authorisation server login</h1>
-    <form action='localhost/oauth/oauth_server/authorisation_server/login' method='post'>
-       <div class='form-wrapper' style='max-width:320px;margin:0 auto;'>
-            <label for='usr'>Username</label>
-            <input type='text' placeholder='Enter Username' name='usr' required>
-            <label for='psd'>Password</label>
-            <input type='password' placeholder='Enter Password' name='pwd' required>
-            <button type='submit'>Login</button>
+    <h1 class="text-center">Welcome to the authorisation server login</h1>
+    <form class="mt-5" action="login" method="post">
+       <div class="form-group" style="max-width:320px;margin:0 auto;">
+            <label for="usr">Email address</label>
+            <input type="text" class="form-control" placeholder="Enter Username" name="email" required>
+            <label for="psd">Password</label>
+            <input type="password" class="form-control" placeholder="Enter Password" name="pwd" required>
+            <button type="submit" class="btn btn-primary mt-3">Login</button>
         </div>
     </form>
 </body>
 </html>
+
+<!-- php $router->pathFor('login') ?> -->

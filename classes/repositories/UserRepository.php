@@ -20,7 +20,7 @@ class UserRepository implements UserRepositoryInterface
         $row = $stmt->execute([$username,$grantType]);
 
         if ($row && $row["password" == $password]) {
-            return new UserEntity($row["id"]);//pass id for getIdentifier()
+            return new UserEntity($row["id"]);//pass id for getIdentifier() in UE
         } else {
             null;
         }

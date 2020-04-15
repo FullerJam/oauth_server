@@ -1,5 +1,10 @@
 <?php
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
+use League\OAuth2\Server\AuthorizationServer;
+use League\OAuth2\Server\Grant\AuthCodeGrant;
+use League\OAuth2\Server\Exception\OAuthServerException;
+use League\OAuth2\Server\CryptKey;
 // Include all the Slim dependencies. Composer creates an 'autoload.php' inside
 // the 'vendor' directory which will, in turn, include all required dependencies.
 require '../vendor/autoload.php';
@@ -7,7 +12,7 @@ require_once '../classes/repositories/ClientRepository.php';
 require_once '../classes/repositories/AccessTokenRepository.php';
 require_once '../classes/repositories/ScopeRepository.php';
 require_once '../classes/repositories/AuthCodeRepository.php';
-// require_once '../classes/repositories/RefreshTokenRepository.php';
+require_once '../classes/repositories/RefreshTokenRepository.php';// not needed
 require_once '../classes/entities/ClientEntity.php';
 require_once '../classes/entities/UserEntity.php';
 require_once '../classes/entities/AccessTokenEntity.php';
@@ -15,20 +20,23 @@ require_once '../classes/entities/ScopeEntity.php';
 require_once '../classes/entities/AuthCodeEntity.php';
 require_once '../classes/entities/RefreshTokenEntity.php';
 
+$config = [
+    'settings' => ['displayErrorDetails' => true]
+];
 
 // Create a new Slim App object. (v3 method)
-$app = new \Slim\App;
+$app = new \Slim\App($config);
 // php renderer object for phtml
-// $view = new \Slim\Views\PhpRenderer('views');
+
+$container = $app->getContainer();
+
+// $view = new \Slim\Views\PhpRenderer('./views/');
 $container['view'] = function ($container) {
     return new \Slim\Views\PhpRenderer('./views/');
 };
 
-$container = $app->getContainer();
-
-$conn = new PDO("mysql:host=localhost;dbname=oauth2.0", "root", "");
-
-$container['db'] = function () use ($conn) {
+$container['db'] = function () {
+    $conn = new PDO("mysql:host=localhost;dbname=oauth2.0", "root", "");
     return $conn;
 };
 
@@ -37,11 +45,11 @@ $clientRepository = new ClientRepository($conn); // instance of ClientRepository
 $scopeRepository = new ScopeRepository($conn); // instance of ScopeRepositoryInterface
 $accessTokenRepository = new AccessTokenRepository($conn); // instance of AccessTokenRepositoryInterface
 $authCodeRepository = new AuthCodeRepository($conn); // instance of AuthCodeRepositoryInterface
-// $refreshTokenRepository = new RefreshTokenRepository($conn); // instance of RefreshTokenRepositoryInterface
+$refreshTokenRepository = new RefreshTokenRepository($conn); // instance of RefreshTokenRepositoryInterface
 
-$privateKey = '../private.key'; //private key file, added to git ignore
+// $privateKey = 'file://C:/xampp/htdocs/oauth/private/private.key'; //private key file, added to git ignore
 
-//$privateKey = new CryptKey('file://path/to/private.key', 'passphrase'); // if private key has a pass phrase
+$privateKey = new CryptKey('C:\xampp\htdocs\oauth\private\private.key', null, false);
 $encryptionKey = 'n8Joj0/sNX1PgY3XlOrIY+D0B+bZKcuo7ofGaans82k='; // generate 'openssl rand -base64 32' in console omit the 's
 
 // Setup the authorization server
@@ -55,11 +63,11 @@ $server = new \League\OAuth2\Server\AuthorizationServer(
 
 $grant = new \League\OAuth2\Server\Grant\AuthCodeGrant(
     $authCodeRepository,
-    // $refreshTokenRepository,
+    $refreshTokenRepository,
     new \DateInterval('PT10M') // authorization codes will expire after 10 minutes
 );
 
-$grant->setRefreshTokenTTL(new \DateInterval('P1M')); // refresh tokens will expire after 1 month
+// $grant->setRefreshTokenTTL(new \DateInterval('PT1H')); // refresh tokens will expire after 1 hour
 
 // Enable the client credentials grant on the server
 $server->enableGrantType(
@@ -90,33 +98,29 @@ $app->post('/access_token', function(Request $req, Response $res, array $args) {
 })->setName('accessToken');
 
 //client redirects the user to an authorization endpoint
-$app->get('/authorise', function(Request $req, Response $res, array $args) {
+$app->get('/authorize', function(Request $req, Response $res, array $args) {
 
     try {
         //getQuery() returns query as string - getQueryParams() returns associative array of those params -> http://www.slimframework.com/docs/v3/objects/request.html
-        // $queryParams = $req->getQueryParams(); //flow part one params [response_type, client_id, redirect_uri, scope, state] -> https://oauth2.thephpleague.com/authorization-server/auth-code-grant/
-    
+         $queryParams = $req->getQueryParams(); //flow part one params [response_type, client_id, redirect_uri, scope, state] -> https://oauth2.thephpleague.com/authorization-server/auth-code-grant/
+        
         //save all params to session variables
         session_start();
         $_SESSION["oauth_qp"] = [];
         $qpFields = ["response_type", "client_id", "redirect_uri", "state"]; // ignoring scope as returning all scopes
         foreach($qpFields as $qpField){
-            $_SESSION["oauth_qp"][$qpField] = htmlspecialchars($_GET[$field]);
+            $_SESSION["oauth_qp"][$qpField] = $_GET[$qpField];
         }
-
-
-        // found here - vendor\league\oauth2-server\src\AuthorizationServer.php
-        //dont think i have to do anything
         
         // The auth request object can be serialized and saved into a user's session.
+
         // You will probably want to redirect the user at this point to a login endpoint.
         
         if (!isset($_SESSION['authorised_user'])) {
             //login --
-            $res = $view->render($res, 'login.phtml');
+            $res = $this->view->render($res, 'login.phtml');
             return $res;
         } else {
-            
             // Validate the HTTP request and return an AuthorizationRequest object.
             $authRequest = $server->validateAuthorizationRequest($request);
 
@@ -126,14 +130,12 @@ $app->get('/authorise', function(Request $req, Response $res, array $args) {
             // At this point you should redirect the user to an authorization page.
             // This form will ask the user to approve the client and the scopes requested.
 
-            
             unset($_SESSION['authorised_user']);
             // Once the user has approved or denied the client update the status
             // (true = approved, false = denied)
             $authRequest->setAuthorizationApproved(true);
             // Return the HTTP redirect response
             return $server->completeAuthorizationRequest($authRequest, $response);
-
         }
     } catch (OAuthServerException $exception) {
 
@@ -150,20 +152,20 @@ $app->get('/authorise', function(Request $req, Response $res, array $args) {
     }
 })->setName('authorise');
 
-$app->post('/login', function(Request $req, Response $res, array $args) {
+$app->post('/login', function(Request $req, Response $res, array $args) use($conn){
 
     try {
         session_start();
         $postData = $req->getParsedBody();
-        $usr = $postData["usr"];
+        $email = $postData["email"];
         $pwd = $postData["pwd"]; // retrieve login details
 
-        $sql = "SELECT * from users WHERE user=?";
+        $sql = "SELECT email, password, id FROM users WHERE email=?";
         $ps = $this->db->prepare($sql);
-        $ps->execute([$usr]);
+        $ps->execute([$email]);
         $row = $ps->fetch(); // find user that matches posted credentials
 
-        if ($row != false) {
+        if ($row != false) { //if email exists
             if ($pwd == $row["password"]) {
                 $_SESSION["logged_in_user"] = $row["id"]; // set authorised user session variable equal to id so it can be used in UserEntity class
 
