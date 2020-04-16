@@ -2,12 +2,12 @@
 
 
 use League\OAuth2\Server\Repositories\ClientRepositoryInterface;
-use League\OAuth2\Server\Entities\ClientEntity;
+// use League\OAuth2\Server\Entities\ClientEntity; //commented out, preventing error where slim couldnt find ClientEntity..
 
 class ClientRepository implements ClientRepositoryInterface
 {
-    const CLIENT_NAME = 'My Awesome App';
-    const REDIRECT_URI = 'http://foo/bar';
+    // const CLIENT_NAME = 'My Awesome App';
+    // const REDIRECT_URI = 'http://foo/bar';
 
     protected $conn;
 

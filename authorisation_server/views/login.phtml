@@ -6,10 +6,22 @@
     <title>Oauth Login</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 </head>
+
+<style>
+    .wrapper{
+        height:80vh;
+        width:100%;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        flex-direction:column;
+    }
+</style>
 <body>
+    <div class="wrapper">
     <h1 class="text-center">Welcome to the authorisation server login</h1>
     <form class="mt-5" action="login" method="post">
-       <div class="form-group" style="max-width:320px;margin:0 auto;">
+       <div class="form-group" style="max-width:320px;min-width:320px;">
             <label for="usr">Email address</label>
             <input type="text" class="form-control" placeholder="Enter Username" name="email" required>
             <label for="psd">Password</label>
@@ -17,6 +29,7 @@
             <button type="submit" class="btn btn-primary mt-3">Login</button>
         </div>
     </form>
+    </div>
 </body>
 </html>
 

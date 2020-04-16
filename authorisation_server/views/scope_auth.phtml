@@ -8,22 +8,31 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 </head>
 
+<style>
+    .wrapper{
+        height:80vh;
+        width:100%;
+        display:flex;
+        justify-content:center;
+        flex-direction:column;
+    }
+</style>
+
 <body>
 
-    <div class="wrapper" style="max-width:320px;margin:10vh auto;">
+    <div class="wrapper" style="max-width:500px;min-width:500px;margin:0 auto;">
         <h1>Oauth scope authentication!</h1>
-        <h4><?php echo "<h1>" . $_SESSION["clientApplication"] . "</h1>"; ?> would like access to your account details please provide permission for the requested permissions below </h4>
-        <p><?php if(isset($error)){echo "<p>".$error[0]."</p>";}; ?></p>
-
-        <form class="mt-5" method="post" action="localhost/oauth/oauth_server/authorisation_server/handle_scopes">
+        <h4><?php echo $_SESSION["clientApplication"]; ?> would like access to your account details please provide permission for the requested permissions below </h4>
+        <p><?php if (isset($error)) {echo "<p>Error: ".$error[0]."</p>";};?></p>
+        <form method="post" action="handle_scopes">
         <div class="form-group">
         <label for="scopes_array">Approve permissions</label><br>
             <?php
                 foreach ($allScopes as $scope) {
                     echo "<input type='checkbox' checked='checked' name='scopes[]' value='$scope[id]' />$scope[description]<br />";
                 } //adding name as scopes[] returns an array in post
-            ?>
-            <button type="submit" name="ApproveScopes" class="btn btn-primary mt-3">Approve</button>
+?>
+            <button type="submit" name="ApproveScopes" value="true" class="btn btn-primary mt-3">Approve</button>
         </div>
         </form>
     </div>

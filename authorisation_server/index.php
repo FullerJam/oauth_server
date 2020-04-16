@@ -45,15 +45,13 @@ $container['db'] = function ($container) {
 
 //created server container to follow example on github
 $container['server'] = function ($container) {
-    $db = $conn->get('db');//explicit ref to container instance
+    $db = $container->get('db');//explicit ref to container instance
 // Init our repositories pass database through param
     $clientRepository = new ClientRepository($db); // instance of ClientRepositoryInterface
     $scopeRepository = new ScopeRepository($db); // instance of ScopeRepositoryInterface
     $accessTokenRepository = new AccessTokenRepository($db); // instance of AccessTokenRepositoryInterface
     $authCodeRepository = new AuthCodeRepository($db); // instance of AuthCodeRepositoryInterface
     $refreshTokenRepository = new RefreshTokenRepository($db); // instance of RefreshTokenRepositoryInterface
-
-// $privateKey = 'file://C:/xampp/htdocs/oauth/private/private.key'; //private key file, added to git ignore
 
     $privateKey = new CryptKey('C:\xampp\htdocs\oauth\private\private.key', null, false);
     $encryptionKey = 'n8Joj0/sNX1PgY3XlOrIY+D0B+bZKcuo7ofGaans82k='; // generate 'openssl rand -base64 32' in console omit the 's
@@ -81,25 +79,20 @@ $container['server'] = function ($container) {
 
 //client requests an access token
 $app->post('/access_token', function (Request $req, Response $res, array $args) {
-
     try {
-
         // Try to respond to the request
-        return $server->respondToAccessTokenRequest($request, $response);
-
+        $this->server->respondToAccessTokenRequest($request, $response);
     } catch (\League\OAuth2\Server\Exception\OAuthServerException $exception) {
-
         // All instances of OAuthServerException can be formatted into a HTTP response
         return $exception->generateHttpResponse($response);
-
     } catch (\Exception $exception) {
-
         // Unknown exception
         $body = new Stream(fopen('php://temp', 'r+'));
         $body->write($exception->getMessage());
         return $response->withStatus(500)->withBody($body);
     }
 })->setName('accessToken');
+
 
 //client redirects the user to an authorization endpoint
 $app->get('/authorize', function (Request $req, Response $res, array $args) {
@@ -125,16 +118,13 @@ $app->get('/authorize', function (Request $req, Response $res, array $args) {
             return $res;
         } else {
             // Validate the HTTP request and return an AuthorizationRequest object.
-            $authRequest = $server->validateAuthorizationRequest($request);
+            $authRequest = $this->server->validateAuthorizationRequest($req);
 
             // Once the user has logged in set the user on the AuthorizationRequest
             $authRequest->setUser(new UserEntity($_SESSION['authorised_user'])); // an instance of UserEntityInterface
 
-            // At this point you should redirect the user to an authorization page.
-            // This form will ask the user to approve the client and the scopes requested.
-
             unset($_SESSION['authorised_user']);
-            // Once the user has approved or denied the client update the status
+            //user has approved in some capacity if they have come this far
             // (true = approved, false = denied)
             $authRequest->setAuthorizationApproved(true);
             // Return the HTTP redirect response
@@ -143,14 +133,14 @@ $app->get('/authorize', function (Request $req, Response $res, array $args) {
     } catch (OAuthServerException $exception) {
 
         // All instances of OAuthServerException can be formatted into a HTTP response
-        return $exception->generateHttpResponse($response);
+        return $exception->generateHttpResponse($res);
 
     } catch (\Exception $exception) {
 
         // Unknown exception
         $body = new Stream(fopen('php://temp', 'r+'));
         $body->write($exception->getMessage());
-        return $response->withStatus(500)->withBody($body);
+        return $res->withStatus(500)->withBody($body);
 
     }
 })->setName('authorise');
@@ -212,9 +202,11 @@ $app->post('/handle_scopes', function (Request $req, Response $res, array $args)
 
         return $res->withRedirect($this->router->pathFor('authorise') . "?$queryParams");
     } else {
-        $error = "You need to atleast authorise read access to use this service";
+        $error = ["You need to atleast authorise read access to use this service"];
         // return $res->withRedirect($this->router->pathFor('scopeAuthorisation')); // changed out for $view->render as I wasnt passing $error
-        return $res = $view->render($res, "scope_auth.phtml", ['error' => $error]);
+        $newScopeRepository = new ScopeRepository($this->db);
+        $allScopes = $newScopeRepository->returnAllScopes();
+        $this->view->render($res, "scope_auth.phtml", array('allScopes' => $allScopes,'error' => $error));
     }
 })->setName('handle_scopes');
 
