@@ -12,8 +12,8 @@
 
     <div class="wrapper" style="max-width:320px;margin:10vh auto;">
         <h1>Oauth scope authentication!</h1>
-        <h4><?php echo "" . $_SESSION["clientApplication"] . ""; ?> would like access to your account details please provide permission for the requested permissions below </h4>
-        <p><?php echo $error[0] ?></p>
+        <h4><?php echo "<h1>" . $_SESSION["clientApplication"] . "</h1>"; ?> would like access to your account details please provide permission for the requested permissions below </h4>
+        <p><?php if(isset($error)){echo "<p>".$error[0]."</p>";}; ?></p>
 
         <form class="mt-5" method="post" action="localhost/oauth/oauth_server/authorisation_server/handle_scopes">
         <div class="form-group">
@@ -23,7 +23,7 @@
                     echo "<input type='checkbox' checked='checked' name='scopes[]' value='$scope[id]' />$scope[description]<br />";
                 } //adding name as scopes[] returns an array in post
             ?>
-            <input type="submit" name="ApproveScopes" value="true" />
+            <button type="submit" name="ApproveScopes" class="btn btn-primary mt-3">Approve</button>
         </div>
         </form>
     </div>

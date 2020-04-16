@@ -189,13 +189,13 @@ $app->get('/scope_authorisation', function (Request $req, Response $res, array $
     } else {
         $sql = "SELECT name FROM oauth_clients where id=?";
         $ps = $this->db->prepare($sql); //ps preparedstatement
-        $ps->execute([$_SESSION["logged_in_user"]]);
+        $ps->execute([$_SESSION["oauth_qp"]["client_id"]]);
         $clientApplication = $ps->fetch();
         $_SESSION["clientApplication"] = $clientApplication; // retrieve client application name & save to session for View message
         //real Oauth server would use Scopes session variable to set requested scopes from client in scope_auth view. just a demo
         $newScopeRepository = new ScopeRepository($this->db);
-        $allscopes = $newScopeRepository->returnAllScopes();
-        return $res = $this->view->render($res, "scope_auth.phtml", $allscopes); //render accepts array as an argument
+        $allScopes = $newScopeRepository->returnAllScopes();
+        $this->view->render($res, "scope_auth.phtml", array('allScopes' => $allScopes)); //render accepts array as an argument. did incorrectly http://www.slimframework.com/docs/v2/view/rendering.html
     }
 
 })->setName('scopeAuthorisation');
@@ -214,7 +214,7 @@ $app->post('/handle_scopes', function (Request $req, Response $res, array $args)
     } else {
         $error = "You need to atleast authorise read access to use this service";
         // return $res->withRedirect($this->router->pathFor('scopeAuthorisation')); // changed out for $view->render as I wasnt passing $error
-        return $res = $view->render($res, "scope_auth.phtml", [$error]);
+        return $res = $view->render($res, "scope_auth.phtml", ['error' => $error]);
     }
 })->setName('handle_scopes');
 
