@@ -179,7 +179,8 @@ $app->get('/scope_authorisation', function (Request $req, Response $res, array $
     } else {
         $sql = "SELECT name FROM oauth_clients where id=?";
         $ps = $this->db->prepare($sql); //ps preparedstatement
-        $ps->execute([$_SESSION["oauth_qp"]["client_id"]]);
+        $clientId = $_SESSION["oauth_qp"]["client_id"];
+        $ps->execute([$clientId]);
         $clientApplication = $ps->fetch();
         $_SESSION["clientApplication"] = $clientApplication; // retrieve client application name & save to session for View message
         //real Oauth server would use Scopes session variable to set requested scopes from client in scope_auth view. just a demo

@@ -23,6 +23,7 @@
     <div class="wrapper" style="max-width:500px;min-width:500px;margin:0 auto;">
         <h1>Oauth scope authentication!</h1>
         <h4><?php echo $_SESSION["clientApplication"]; ?> would like access to your account details please provide permission for the requested permissions below </h4>
+        <p><?php echo "Client id = ".$_SESSION["oauth_qp"]["client_id"].""; ?></p>
         <p><?php if (isset($error)) {echo "<p>Error: ".$error[0]."</p>";};?></p>
         <form method="post" action="handle_scopes">
         <div class="form-group">
