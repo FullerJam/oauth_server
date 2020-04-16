@@ -1,21 +1,23 @@
 <?php
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Repositories\ScopeRepositoryInterface;
-use OAuth2ServerExamples\Entities\ScopeEntity;
+// use OAuth2ServerExamples\Entities\ScopeEntity;
 
 class ScopeRepository implements ScopeRepositoryInterface
 {
-    protected $conn;
+    protected $db;
 
-    public function __construct($conn){
-        $this->conn = $conn;
+    public function __construct($db){
+        $this->db = $db;
     }
 
     public function returnAllScopes(){
         $sql = "SELECT * FROM scopes";
-        $stmt = $this->conn->prepare($sql);
+        $stmt = $this->db->prepare($sql);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC); // returns an array indexed by column name https://www.php.net/manual/en/pdostatement.fetch.php
+        //fetchAll() returns an array containing all of the remaining rows in the result set.
+        //https://www.php.net/manual/en/pdostatement.fetchall.php
     }
 
     /**
