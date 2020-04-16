@@ -9,10 +9,10 @@ class ClientRepository implements ClientRepositoryInterface
     // const CLIENT_NAME = 'My Awesome App';
     // const REDIRECT_URI = 'http://foo/bar';
 
-    protected $conn;
+    protected $db;
 
-    public function __construct($conn){
-        $this->conn = $conn;
+    public function __construct($db){
+        $this->db = $db;
     }
 
 
@@ -23,7 +23,7 @@ class ClientRepository implements ClientRepositoryInterface
     {
         $client = new ClientEntity();
         $sql = "SELECT name, redirect_uri FROM clients WHERE client_id=?";
-        $stmt = $this->conn->prepare($sql);
+        $stmt = $this->db->prepare($sql);
         $stmt->execute([$clientIdentifier]);
         $row = $stmt->fetch(); 
         $client->setIdentifier($clientIdentifier);
@@ -40,7 +40,7 @@ class ClientRepository implements ClientRepositoryInterface
     public function validateClient($clientIdentifier, $clientSecret, $grantType)
     {
         $sql = "SELECT client_secret FROM clients WHERE client_id=? AND grant_types=?";
-        $stmt = $this->conn->prepare($sql);
+        $stmt = $this->db->prepare($sql);
         $stmt->execute([$clientIdentifier, $grantType]);
         $row = $stmt->fetch();
         if ($row == true && $clientSecret == $row["client_secret"]){

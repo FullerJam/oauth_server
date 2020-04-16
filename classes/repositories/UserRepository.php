@@ -6,17 +6,17 @@ use OAuth2ServerExamples\Entities\UserEntity;
 
 class UserRepository implements UserRepositoryInterface
 {
-    protected $conn;
+    protected $db;
 
-    public function __construct($conn){
-        $this->conn = $conn;
+    public function __construct($db){
+        $this->db = $db;
     }
     /**
      * {@inheritdoc}
      */
     public function getUserEntityByUserCredentials($username,$password,$grantType,ClientEntityInterface $clientEntity) {
         $sql = "SELECT password, id FROM users WHERE username=? AND approved_grant_types=?";
-        $stmt = $this->conn->prepare($sql);
+        $stmt = $this->db->prepare($sql);
         $row = $stmt->execute([$username,$grantType]);
 
         if ($row && $row["password" == $password]) {

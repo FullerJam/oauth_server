@@ -8,10 +8,10 @@ use OAuth2ServerExamples\Entities\AuthCodeEntity;
 class AuthCodeRepository implements AuthCodeRepositoryInterface
 {
 
-    protected $conn;
+    protected $db;
 
-    public function __construct($conn){
-        $this->conn = $conn;
+    public function __construct($db){
+        $this->db = $db;
     }
     /**
      * {@inheritdoc}
@@ -23,7 +23,7 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
         
         $sql = "INSERT INTO authorisation_codes(authorisation_code, code_expires, user_id, scope, client_id) VALUES (?,?,?,?,?)"; //SQL statement
 
-        $stmt = $this->conn->prepare($sql); //prepared statement, use TokenInterface extend from AuthCodeEntityInterface. Token interface functions to retrieve query string data    
+        $stmt = $this->db->prepare($sql); //prepared statement, use TokenInterface extend from AuthCodeEntityInterface. Token interface functions to retrieve query string data    
 
         $stmt->execute([$authCodeEntity->getIdentifier(), $authCodeEntity->getExpiryDateTime()->getTimestamp(), $authCodeEntity->getUserIdentifier(), $suppliedScopes, $authCodeEntity->getClient()->getIdentifier()]);    
     }
@@ -35,7 +35,7 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
     {
         // Some logic to revoke the auth code in a database
         $sql = "UPDATE authorisation_codes SET is_revoked=true WHERE authorisation_code=?";
-        $stmt = $this->conn->prepare($sql);
+        $stmt = $this->db->prepare($sql);
         $stmt->execute([$codeId]);
 
     }
@@ -46,7 +46,7 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
     public function isAuthCodeRevoked($codeId)
     {
         $sql = "SELECT revoked FROM authorisation_codes WHERE auth_code=$codeId";
-        $stmt = $this->conn->prepare($sql);
+        $stmt = $this->db->prepare($sql);
         $row = $stmt->fetch();
         return $row["is_revoked"];
     }

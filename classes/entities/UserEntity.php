@@ -7,11 +7,11 @@ class UserEntity implements UserEntityInterface
 {
     use EntityTrait;
 
-    protected $conn;
-    public $id;
+    protected $db;
+    protected $id;
 
-    public function __construct($id, $conn){
-        $this->conn = $conn;
+    public function __construct($id, $db){
+        $this->db = $db;
         $this->id = $id;
     }
     /**
