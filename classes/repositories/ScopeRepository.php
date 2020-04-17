@@ -1,17 +1,20 @@
 <?php
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Repositories\ScopeRepositoryInterface;
+
 // use OAuth2ServerExamples\Entities\ScopeEntity;
 
 class ScopeRepository implements ScopeRepositoryInterface
 {
     protected $db;
 
-    public function __construct($db){
+    public function __construct($db)
+    {
         $this->db = $db;
     }
 
-    public function returnAllScopes(){
+    public function returnAllScopes()
+    {
         $sql = "SELECT * FROM scopes";
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
@@ -25,20 +28,15 @@ class ScopeRepository implements ScopeRepositoryInterface
      */
     public function getScopeEntityByIdentifier($scopeIdentifier)
     {
-        $scopes = [
-            'basic' => [
-                'description' => 'Basic details about you',
-            ],
-            'email' => [
-                'description' => 'Your email address',
-            ],
-        ];
-
-        if (\array_key_exists($scopeIdentifier, $scopes) === false) {
+        $sql = "SELECT id, description FROM scopes WHERE id=?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$scopeIdentifier]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        console.log($result);
+        if (\array_key_exists($scopeIdentifier, $result) === false) {
             return;
         }
-
-        $scope = new ScopeEntity();
+        $scope = new ScopeEntity($result["id"], $result["description"]);
         $scope->setIdentifier($scopeIdentifier);
 
         return $scope;
