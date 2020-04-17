@@ -5,9 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oauth Login</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+
 </head>
 
 <style>
+    .body, h1, label{
+            font-family: 'Special Elite', cursive;
+            
+        }
     .wrapper{
         height:80vh;
         width:100%;
@@ -19,13 +25,13 @@
 </style>
 <body>
     <div class="wrapper">
-    <h1 class="text-center">Welcome to the authorisation server login</h1>
+    <h1 class="text-center">Authorisation server login</h1>
     <form class="mt-5" action="login" method="post">
        <div class="form-group" style="max-width:320px;min-width:320px;">
             <label for="usr">Email address</label>
-            <input type="text" class="form-control" placeholder="Enter Username" name="email" required>
+            <input type="email" class="form-control" placeholder="Email" name="email" required>
             <label for="psd">Password</label>
-            <input type="password" class="form-control" placeholder="Enter Password" name="pwd" required>
+            <input type="password" class="form-control" placeholder="Password" name="pwd" required>
             <button type="submit" class="btn btn-primary mt-3">Login</button>
         </div>
     </form>

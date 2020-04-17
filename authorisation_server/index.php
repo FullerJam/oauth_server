@@ -81,15 +81,15 @@ $container['server'] = function ($container) {
 $app->post('/access_token', function (Request $req, Response $res, array $args) {
     try {
         // Try to respond to the request
-        $this->server->respondToAccessTokenRequest($request, $response);
+        $this->server->respondToAccessTokenRequest($req, $res);
     } catch (\League\OAuth2\Server\Exception\OAuthServerException $exception) {
         // All instances of OAuthServerException can be formatted into a HTTP response
-        return $exception->generateHttpResponse($response);
+        return $exception->generateHttpResponse($res);
     } catch (\Exception $exception) {
         // Unknown exception
         $body = new Stream(fopen('php://temp', 'r+'));
         $body->write($exception->getMessage());
-        return $response->withStatus(500)->withBody($body);
+        return $res->withStatus(500)->withBody($body);
     }
 })->setName('accessToken');
 
@@ -121,14 +121,14 @@ $app->get('/authorize', function (Request $req, Response $res, array $args) {
             $authRequest = $this->server->validateAuthorizationRequest($req);
 
             // Once the user has logged in set the user on the AuthorizationRequest
-            $authRequest->setUser(new UserEntity($_SESSION['authorised_user'])); // an instance of UserEntityInterface
+            $authRequest->setUser(new UserEntity($_SESSION['authorised_user'], $this->db)); // an instance of UserEntityInterface
 
             unset($_SESSION['authorised_user']);
             //user has approved in some capacity if they have come this far
             // (true = approved, false = denied)
             $authRequest->setAuthorizationApproved(true);
             // Return the HTTP redirect response
-            return $server->completeAuthorizationRequest($authRequest, $response);
+            return $this->server->completeAuthorizationRequest($authRequest, $res);
         }
     } catch (OAuthServerException $exception) {
 
@@ -181,12 +181,12 @@ $app->get('/scope_authorisation', function (Request $req, Response $res, array $
         $ps = $this->db->prepare($sql); //ps preparedstatement
         $clientId = $_SESSION["oauth_qp"]["client_id"];
         $ps->execute([$clientId]);
-        $clientApplication = $ps->fetch();
-        $_SESSION["clientApplication"] = $clientApplication; // retrieve client application name & save to session for View message
+        $clientApplication = $ps->fetch(PDO::FETCH_ASSOC);
+         // retrieve client application name & save to session for View message
         //real Oauth server would use Scopes session variable to set requested scopes from client in scope_auth view. just a demo
         $newScopeRepository = new ScopeRepository($this->db);
         $allScopes = $newScopeRepository->returnAllScopes();
-        $this->view->render($res, "scope_auth.phtml", array('allScopes' => $allScopes)); //render accepts array as an argument. did incorrectly http://www.slimframework.com/docs/v2/view/rendering.html
+        $this->view->render($res, "scope_auth.phtml", array('allScopes' => $allScopes, 'clientApplication' => $clientApplication)); //render accepts array as an argument. did incorrectly http://www.slimframework.com/docs/v2/view/rendering.html
     }
 
 })->setName('scopeAuthorisation');
