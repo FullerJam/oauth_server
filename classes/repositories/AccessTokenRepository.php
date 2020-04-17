@@ -18,10 +18,19 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
     public function persistNewAccessToken(AccessTokenEntityInterface $accessTokenEntity)
     {
         // Some logic here to save the access token to a database
-        $suppliedScopes = implode(" ", $accessTokenEntity->getScopes()); //implode the scopes array so it can be saved to a database
+        $suppliedScopes = $accessTokenEntity->getScopes(); 
+
+        $scopesArray = [];
+        foreach ($suppliedScopes as $scope){
+            $scopesArray[] = $scope->getIdentifier(); // see token interface for gI()
+        }
+
+        $scopesAsString = implode(" ", $scopesArray)  ;      
+        // got array to string conversion error, use implode to space seperate scopes for prepared statement.. getting object cant be converted to string now.. make up your mind php! 
+
         $sql = "INSERT INTO access_tokens(access_token, token_expires, user_id, scope, client_id) VALUES (?,?,?,?,?)";
         $stmt = $this->db->prepare($sql); 
-        $stmt->execute([$accessToken->getIdentifier(), $accessToken->getExpiryDateTime()->getTimestamp(), $accessToken->getUserIdentifier(), $scopes, $accessToken->getClient()->getIdentifier()]);
+        $stmt->execute([$accessToken->getIdentifier(), $accessToken->getExpiryDateTime()->getTimestamp(), $accessToken->getUserIdentifier(), $scopesAsString, $accessToken->getClient()->getIdentifier()]);
     }
 
     /**

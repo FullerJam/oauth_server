@@ -28,18 +28,29 @@ class ScopeRepository implements ScopeRepositoryInterface
      */
     public function getScopeEntityByIdentifier($scopeIdentifier)
     {
+
+        // $sql = "SELECT * FROM scopes";
+        // $stmt = $this->db->prepare($sql);
+        // $stmt->execute();
+        // $results = $stmt->fetch(PDO::FETCH_ASSOC);
+        // foreach($results as $result){
+        //     $scopeArray[$result["id"]] = $result["description"];
+        // }
+
         $sql = "SELECT id, description FROM scopes WHERE id=?";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$scopeIdentifier]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        console.log($result);
-        if (\array_key_exists($scopeIdentifier, $result) === false) {
+        $scopeArray = [$result["id"] => $result["description"]];
+        if (\array_key_exists($scopeIdentifier, $scopeArray) === false) {
             return;
         }
-        $scope = new ScopeEntity($result["id"], $result["description"]);
+        $scope = new ScopeEntity($scopeIdentifier, $result["description"]);
         $scope->setIdentifier($scopeIdentifier);
 
         return $scope;
+
+
     }
 
     /**

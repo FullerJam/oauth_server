@@ -19,13 +19,20 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
     public function persistNewAuthCode(AuthCodeEntityInterface $authCodeEntity)
     {
         // Some logic to persist the auth code to a database
-        $suppliedScopes = implode(" ", $authCodeEntity->getScopes()); //implode the scopes array so it can be saved to a database
-        
+        $suppliedScopes = $authCodeEntity->getScopes(); 
+
+        $scopesArray = [];
+        foreach ($suppliedScopes as $scope){
+            $scopesArray[] = $scope->getIdentifier(); // see token interface for gI()
+        }
+
+        $scopesAsString = implode(" ", $scopesArray);
+    
         $sql = "INSERT INTO authorisation_codes(authorisation_code, code_expires, user_id, scope, client_id) VALUES (?,?,?,?,?)"; //SQL statement
 
-        $stmt = $this->db->prepare($sql); //prepared statement, use TokenInterface extend from AuthCodeEntityInterface. Token interface functions to retrieve query string data    
+        $stmt = $this->db->prepare($sql); // use TokenInterface extend from AuthCodeEntityInterface. Token interface functions to retrieve query string data    
 
-        $stmt->execute([$authCodeEntity->getIdentifier(), $authCodeEntity->getExpiryDateTime()->getTimestamp(), $authCodeEntity->getUserIdentifier(), $suppliedScopes, $authCodeEntity->getClient()->getIdentifier()]);    
+        $stmt->execute([$authCodeEntity->getIdentifier(), $authCodeEntity->getExpiryDateTime()->getTimestamp(), $authCodeEntity->getUserIdentifier(), $scopesAsString, $authCodeEntity->getClient()->getIdentifier()]);    
     }
 
     /**
