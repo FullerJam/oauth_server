@@ -30,7 +30,7 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
 
         $sql = "INSERT INTO access_tokens(access_token, token_expires, user_id, scope, client_id) VALUES (?,?,?,?,?)";
         $stmt = $this->db->prepare($sql); 
-        $stmt->execute([$accessToken->getIdentifier(), $accessToken->getExpiryDateTime()->getTimestamp(), $accessToken->getUserIdentifier(), $scopesAsString, $accessToken->getClient()->getIdentifier()]);
+        $stmt->execute([$accessTokenEntity->getIdentifier(), $accessTokenEntity->getExpiryDateTime()->getTimestamp(), $accessTokenEntity->getUserIdentifier(), $scopesAsString, $accessTokenEntity->getClient()->getIdentifier()]);
     }
 
     /**
