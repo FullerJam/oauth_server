@@ -45,8 +45,8 @@ $container['db'] = function ($container) {
 
 //created server container to follow example on github
 $container['server'] = function ($container) {
-    $db = $container->get('db');//explicit ref to container instance
-// Init our repositories pass database through param
+    $db = $container->get('db'); //explicit ref to container instance
+    // Init our repositories pass database through param
     $clientRepository = new ClientRepository($db); // instance of ClientRepositoryInterface
     $scopeRepository = new ScopeRepository($db); // instance of ScopeRepositoryInterface
     $accessTokenRepository = new AccessTokenRepository($db); // instance of AccessTokenRepositoryInterface
@@ -92,7 +92,6 @@ $app->post('/access_token', function (Request $req, Response $res, array $args) 
         return $res->withStatus(500)->withBody($body);
     }
 })->setName('accessToken');
-
 
 //client redirects the user to an authorization endpoint
 $app->get('/authorize', function (Request $req, Response $res, array $args) {
@@ -158,16 +157,18 @@ $app->post('/login', function (Request $req, Response $res, array $args) {
         $row = $ps->fetch(); // find user that matches posted credentials
 
         if ($row != false) { //if email exists
-            if ($pwd == $row["password"]) {
+            if (password_verify($pwd, $row["password"])) { // ttps://www.php.net/manual/en/function.password-verify.php
                 $_SESSION["logged_in_user"] = $row["id"]; // set authorised user session variable equal to id so it can be used in UserEntity class
                 return $res->withRedirect($this->router->pathFor('scopeAuthorisation'));
             } else {
-                throw new Exception("No user registered by those credentials");
+                throw new Exception("No user registered by those credentials,<br> please try again.");
             }
         }
-    } catch (Exception $e) {
-        $res->getBody()->write($e->getMessage());
-        header("refresh:5;url=localhost/oauth_server/authorisation_server/login");
+    } catch (Exception $error) {
+        $_SESSION["oauth_qp"]["error"] = $error->getMessage();
+        $queryParams = http_build_query($_SESSION["oauth_qp"]);
+        return $res->withRedirect($this->router->pathFor('authorise') . "?$queryParams");
+        // header("refresh:5;url=authorize?"+$queryParams);
     }
 
 })->setName('login');
@@ -182,7 +183,7 @@ $app->get('/scope_authorisation', function (Request $req, Response $res, array $
         $clientId = $_SESSION["oauth_qp"]["client_id"];
         $ps->execute([$clientId]);
         $clientApplication = $ps->fetch(PDO::FETCH_ASSOC);
-         // retrieve client application name & save to session for View message
+        // retrieve client application name & save to session for View message
         //real Oauth server would use Scopes session variable to set requested scopes from client in scope_auth view. just a demo
         $newScopeRepository = new ScopeRepository($this->db);
         $allScopes = $newScopeRepository->returnAllScopes();
@@ -207,7 +208,7 @@ $app->post('/handle_scopes', function (Request $req, Response $res, array $args)
         // return $res->withRedirect($this->router->pathFor('scopeAuthorisation')); // changed out for $view->render as I wasnt passing $error
         $newScopeRepository = new ScopeRepository($this->db);
         $allScopes = $newScopeRepository->returnAllScopes();
-        $this->view->render($res, "scope_auth.phtml", array('allScopes' => $allScopes,'error' => $error));
+        $this->view->render($res, "scope_auth.phtml", array('allScopes' => $allScopes, 'error' => $error));
     }
 })->setName('handle_scopes');
 

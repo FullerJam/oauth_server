@@ -25,8 +25,11 @@
 </style>
 <body>
     <div class="wrapper">
-    <h1 class="text-center">Authorisation server login</h1>
-    <form class="mt-5" action="login" method="post">
+    <h1 class="text-center mb-4">Authorisation server login</h1>
+    <?php if(isset($_GET["error"])){
+        echo"<p class='text-center text-danger'>".$_GET["error"]."</p>";
+    } ?>
+    <form class="mt-1" action="login" method="post">
        <div class="form-group" style="max-width:320px;min-width:320px;">
             <label for="usr">Email address</label>
             <input type="email" class="form-control" placeholder="Email" name="email" required>
