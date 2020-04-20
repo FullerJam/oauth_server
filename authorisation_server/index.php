@@ -3,7 +3,7 @@ use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\CryptKey;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\Grant\AuthCodeGrant;
-use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ResponseInterface as Response; //slim req & res interfaces
 use Psr\Http\Message\ServerRequestInterface as Request;
 // Include all the Slim dependencies. Composer creates an 'autoload.php' inside
 // the 'vendor' directory which will, in turn, include all required dependencies.
@@ -11,17 +11,17 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 session_start(); // was using session start incorrectly? think i only need to declare once as i couldnt get past authorizescopes route
 
 require '../vendor/autoload.php';
-require_once '../classes/repositories/ClientRepository.php';
-require_once '../classes/repositories/AccessTokenRepository.php';
-require_once '../classes/repositories/ScopeRepository.php';
-require_once '../classes/repositories/AuthCodeRepository.php';
-require_once '../classes/repositories/RefreshTokenRepository.php'; // not needed
-require_once '../classes/entities/ClientEntity.php';
-require_once '../classes/entities/UserEntity.php';
-require_once '../classes/entities/AccessTokenEntity.php';
-require_once '../classes/entities/ScopeEntity.php';
-require_once '../classes/entities/AuthCodeEntity.php';
-require_once '../classes/entities/RefreshTokenEntity.php';
+require_once '../Classes/Repositories/ClientRepository.php';
+require_once '../Classes/Repositories/AccessTokenRepository.php';
+require_once '../Classes/Repositories/ScopeRepository.php';
+require_once '../Classes/Repositories/AuthCodeRepository.php';
+require_once '../Classes/Repositories/RefreshTokenRepository.php'; // not needed
+require_once '../Classes/Entities/ClientEntity.php';
+require_once '../classes/Entities/UserEntity.php';
+require_once '../Classes/Entities/AccessTokenEntity.php';
+require_once '../Classes/Entities/ScopeEntity.php';
+require_once '../Classes/Entities/AuthCodeEntity.php';
+require_once '../Classes/Entities/RefreshTokenEntity.php';
 
 $config = [
     'settings' => ['displayErrorDetails' => true],

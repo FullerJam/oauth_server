@@ -29,15 +29,12 @@ new \League\OAuth2\Server\Middleware\ResourceServerMiddleware($server);
 
 // Setup up routes
 $app->get('/read', function ($req, $res, array $args) use($conn) {
-    $res->getBody()->write('Read permissions route');
-    return $res;
+    return $res->withJson(["msg"=>'Read permissions route']);
 });
 
 $app->get('/readwrite', function ($req, $res, array $args) use($conn) {
-    $res->getBody()->write('Read & Write permissions route');
-    return $res;
+    return $res->withJson(["msg"=>'Read & Write permissions route']);
 });
-
 
 // Run the application
 $app->run();

@@ -19,18 +19,17 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
     {
         // Some logic here to save the access token to a database
         $suppliedScopes = $accessTokenEntity->getScopes(); 
-
         $scopesArray = [];
         foreach ($suppliedScopes as $scope){
             $scopesArray[] = $scope->getIdentifier(); // see token interface for gI()
         }
 
-        $scopesAsString = implode(" ", $scopesArray)  ;      
+        $scopesAsString = implode(" ", $scopesArray);      
         // got array to string conversion error, use implode to space seperate scopes for prepared statement.. getting object cant be converted to string now.. make up your mind php! 
 
         $sql = "INSERT INTO access_tokens(access_token, token_expires, user_id, scope, client_id) VALUES (?,?,?,?,?)";
         $stmt = $this->db->prepare($sql); 
-        $stmt->execute([$accessTokenEntity->getIdentifier(), $accessTokenEntity->getExpiryDateTime()->getTimestamp(), $accessTokenEntity->getUserIdentifier(), $scopesAsString, $accessTokenEntity->getClient()->getIdentifier()]);
+        $stmt->execute([$accessTokenEntity->getIdentifier(), $accessTokenEntity->getExpiryDateTime()->format('Y-m-d H:i:s'), $accessTokenEntity->getUserIdentifier(), $scopesAsString, $accessTokenEntity->getClient()->getIdentifier()]);
     }
 
     /**
@@ -48,10 +47,10 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
      */
     public function isAccessTokenRevoked($tokenId)
     {
-        $sql = "SELECT revoked FROM access_tokens WHERE access_token=$tokenId";
+        $sql = "SELECT is_revoked FROM access_tokens WHERE access_token=$tokenId";
         $stmt = $this->db->prepare($sql);
         $row = $stmt->fetch();
-        return $row["is_revoked"];
+        return $row["is_revoked"]; // revoked set to false as default
     }
 
     /**

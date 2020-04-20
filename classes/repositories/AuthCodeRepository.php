@@ -20,7 +20,6 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
     {
         // Some logic to persist the auth code to a database
         $suppliedScopes = $authCodeEntity->getScopes(); 
-
         $scopesArray = [];
         foreach ($suppliedScopes as $scope){
             $scopesArray[] = $scope->getIdentifier(); // see token interface for gI()
@@ -32,7 +31,7 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
 
         $stmt = $this->db->prepare($sql); // use TokenInterface extend from AuthCodeEntityInterface. Token interface functions to retrieve query string data    
 
-        $stmt->execute([$authCodeEntity->getIdentifier(), $authCodeEntity->getExpiryDateTime()->getTimestamp(), $authCodeEntity->getUserIdentifier(), $scopesAsString, $authCodeEntity->getClient()->getIdentifier()]);    
+        $stmt->execute([$authCodeEntity->getIdentifier(), $authCodeEntity->getExpiryDateTime()->format('Y-m-d H:i:s'), $authCodeEntity->getUserIdentifier(), $scopesAsString, $authCodeEntity->getClient()->getIdentifier()]);    
     }
 
     /**
