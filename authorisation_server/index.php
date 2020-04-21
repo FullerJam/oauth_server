@@ -54,7 +54,7 @@ $container['server'] = function ($container) {
     $refreshTokenRepository = new RefreshTokenRepository($db); // instance of RefreshTokenRepositoryInterface
 
     $privateKey = new CryptKey('C:\xampp\htdocs\oauth\private\private.key', null, false);
-    $encryptionKey = 'n8Joj0/sNX1PgY3XlOrIY+D0B+bZKcuo7ofGaans82k='; // generate 'openssl rand -base64 32' in console omit the 's
+    $encryptionKey = 'zIp8MjjxBRQc+CzRTEEbplaJOsIP0OhP0LyhMC+RyKY='; // generate 'openssl rand -base64 32' in console omit the 's
 
 // Setup the authorization server
     $server = new \League\OAuth2\Server\AuthorizationServer(
@@ -78,27 +78,27 @@ $container['server'] = function ($container) {
 // $grant->setRefreshTokenTTL(new \DateInterval('PT1H')); // refresh tokens will expire after 1 hour
 
 //client requests an access token
-$app->post('/access_token', function (Request $req, Response $res, array $args) {
+$app->post('/access_token', function (Request $request, Response $response, array $args) {
     try {
         // Try to respond to the request
-        $this->server->respondToAccessTokenRequest($req, $res);
+        $this->server->respondToAccessTokenRequest($request, $response);
     } catch (\League\OAuth2\Server\Exception\OAuthServerException $exception) {
         // All instances of OAuthServerException can be formatted into a HTTP response
-        return $exception->generateHttpResponse($res);
+        return $exception->generateHttpResponse($response);
     } catch (\Exception $exception) {
         // Unknown exception
         $body = new Stream(fopen('php://temp', 'r+'));
         $body->write($exception->getMessage());
-        return $res->withStatus(500)->withBody($body);
+        return $response->withStatus(500)->withBody($body);
     }
 })->setName('accessToken');
 
 //client redirects the user to an authorization endpoint
-$app->get('/authorize', function (Request $req, Response $res, array $args) {
+$app->get('/authorize', function (Request $request, Response $response, array $args) {
 
     try {
         //getQuery() returns query as string - getQueryParams() returns associative array of those params -> http://www.slimframework.com/docs/v3/objects/request.html
-        //$queryParams = $req->getQueryParams(); //flow part one params [response_type, client_id, redirect_uri, scope, state] -> https://oauth2.thephpleague.com/authorization-server/auth-code-grant/
+        //$queryParams = $request->getQueryParams(); //flow part one params [response_type, client_id, redirect_uri, scope, state] -> https://oauth2.thephpleague.com/authorization-server/auth-code-grant/
 
         //save all params to session variables
         $_SESSION["oauth_qp"] = [];
@@ -113,11 +113,11 @@ $app->get('/authorize', function (Request $req, Response $res, array $args) {
 
         if (!isset($_SESSION['authorised_user'])) {
             //login --
-            $res = $this->view->render($res, 'login.phtml');
-            return $res;
+            $response = $this->view->render($response, 'login.phtml');
+            return $response;
         } else {
             // Validate the HTTP request and return an AuthorizationRequest object.
-            $authRequest = $this->server->validateAuthorizationRequest($req);
+            $authRequest = $this->server->validateAuthorizationRequest($request);
 
             // Once the user has logged in set the user on the AuthorizationRequest
             $authRequest->setUser(new UserEntity($_SESSION['authorised_user'], $this->db)); // an instance of UserEntityInterface
@@ -127,27 +127,27 @@ $app->get('/authorize', function (Request $req, Response $res, array $args) {
             // (true = approved, false = denied)
             $authRequest->setAuthorizationApproved(true);
             // Return the HTTP redirect response
-            return $this->server->completeAuthorizationRequest($authRequest, $res);
+            return $this->server->completeAuthorizationRequest($authRequest, $response);
         }
     } catch (OAuthServerException $exception) {
 
         // All instances of OAuthServerException can be formatted into a HTTP response
-        return $exception->generateHttpResponse($res);
+        return $exception->generateHttpResponse($response);
 
     } catch (\Exception $exception) {
 
         // Unknown exception
         $body = new Stream(fopen('php://temp', 'r+'));
         $body->write($exception->getMessage());
-        return $res->withStatus(500)->withBody($body);
+        return $response->withStatus(500)->withBody($body);
 
     }
 })->setName('authorise');
 
-$app->post('/login', function (Request $req, Response $res, array $args) {
+$app->post('/login', function (Request $request, Response $response, array $args) {
 
     try {
-        $postData = $req->getParsedBody();
+        $postData = $request->getParsedBody();
         $email = $postData["email"];
         $pwd = $postData["pwd"]; // retrieve login details
 
@@ -159,7 +159,7 @@ $app->post('/login', function (Request $req, Response $res, array $args) {
         if ($row != false) { //if email exists
             if (password_verify($pwd, $row["password"])) { // ttps://www.php.net/manual/en/function.password-verify.php
                 $_SESSION["logged_in_user"] = $row["id"]; // set authorised user session variable equal to id so it can be used in UserEntity class
-                return $res->withRedirect($this->router->pathFor('scopeAuthorisation'));
+                return $response->withRedirect($this->router->pathFor('scopeAuthorisation'));
             } else {
                 throw new Exception("No user registered by those credentials,<br> please try again.");
             }
@@ -167,32 +167,34 @@ $app->post('/login', function (Request $req, Response $res, array $args) {
     } catch (Exception $error) {
         $_SESSION["oauth_qp"]["error"] = $error->getMessage();
         $queryParams = http_build_query($_SESSION["oauth_qp"]);
-        return $res->withRedirect($this->router->pathFor('authorise') . "?$queryParams");
+        return $response->withRedirect($this->router->pathFor('authorise') . "?$queryParams");
         // header("refresh:5;url=authorize?"+$queryParams);
     }
 
 })->setName('login');
 
-$app->get('/scope_authorisation', function (Request $req, Response $res, array $args) {
+$app->get('/scope_authorisation', function (Request $request, Response $response, array $args) {
     if (!isset($_SESSION["logged_in_user"])) { //if user has not logged in redirect to login view else..
-        $res = $this->view->render($res, 'login.phtml');
-        return $res;
+        $response = $this->view->render($response, 'login.phtml');
+        return $response;
     } else {
         $sql = "SELECT name FROM oauth_clients where id=?";
         $ps = $this->db->prepare($sql); //ps preparedstatement
         $clientId = $_SESSION["oauth_qp"]["client_id"];
         $ps->execute([$clientId]);
-        $clientApplication = $ps->fetch(PDO::FETCH_ASSOC);
+        $row = $ps->fetch();
+        $_SESSION["clientApplication"] = $row;
+
         // retrieve client application name & save to session for View message
         //real Oauth server would use Scopes session variable to set requested scopes from client in scope_auth view. just a demo
         $newScopeRepository = new ScopeRepository($this->db);
         $allScopes = $newScopeRepository->returnAllScopes();
-        $this->view->render($res, "scope_auth.phtml", array('allScopes' => $allScopes, 'clientApplication' => $clientApplication)); //render accepts array as an argument. did incorrectly http://www.slimframework.com/docs/v2/view/rendering.html
+        $this->view->render($response, "scope_auth.phtml", array('allScopes' => $allScopes)); //render accepts array as an argument. did incorrectly http://www.slimframework.com/docs/v2/view/rendering.html
     }
 
 })->setName('scopeAuthorisation');
 
-$app->post('/handle_scopes', function (Request $req, Response $res, array $args) {
+$app->post('/handle_scopes', function (Request $request, Response $response, array $args) {
     if (isset($_SESSION["logged_in_user"]) && ($_POST["ApproveScopes"] == "true")) { //check that user has atleast provided write permission & is logged in
         $scopesArray = $_POST["scopes"];
 
@@ -202,13 +204,13 @@ $app->post('/handle_scopes', function (Request $req, Response $res, array $args)
         $queryParams = http_build_query($_SESSION["oauth_qp"]);
         unset($_SESSION["oauth_qp"]);
 
-        return $res->withRedirect($this->router->pathFor('authorise') . "?$queryParams");
+        return $response->withRedirect($this->router->pathFor('authorise') . "?$queryParams");
     } else {
         $error = ["You need to atleast authorise read access to use this service"];
-        // return $res->withRedirect($this->router->pathFor('scopeAuthorisation')); // changed out for $view->render as I wasnt passing $error
         $newScopeRepository = new ScopeRepository($this->db);
         $allScopes = $newScopeRepository->returnAllScopes();
-        $this->view->render($res, "scope_auth.phtml", array('allScopes' => $allScopes, 'error' => $error));
+        $this->view->render($response, "scope_auth.phtml", array('allScopes' => $allScopes, 'error' => $error));
+        // return $response->withRedirect($this->router->pathFor('scopeAuthorisation')); // changed out for $view->render as I wasnt passing $error
     }
 })->setName('handle_scopes');
 

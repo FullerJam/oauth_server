@@ -41,7 +41,7 @@ class ScopeRepository implements ScopeRepositoryInterface
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$scopeIdentifier]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $scopeArray = [$result["id"] => $result["description"]];
+        $scopeArray = [$result["id"] => $result["description"]]; // array_key_exists expects associative array
         if (\array_key_exists($scopeIdentifier, $scopeArray) === false) {
             return;
         }

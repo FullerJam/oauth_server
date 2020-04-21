@@ -11,7 +11,7 @@
 </head>
 
 <style>
-    .body, h1, p{
+    .body, h1{
             font-family: 'Special Elite', cursive;
             
         }
@@ -28,9 +28,9 @@
 
     <div class="wrapper" style="max-width:500px;min-width:500px;margin:0 auto;">
         <h1>Oauth scope authentication!</h1>
-        <h4><?php echo $clientApplication["name"]; ?> would like access to your account details please provide your consent for the requested permissions below </h4>
+        <h4><?php echo $_SESSION["clientApplication"]; ?> would like access to your account details please provide your consent for the requested permissions below </h4>
         <!-- <p><?php //echo "Client id = ".$_SESSION["oauth_qp"]["client_id"].""; ?></p> -->
-        <p style="color:red;"><?php if (isset($error)) {echo "<p>Error: ".$error[0]."</p>";};?></p>
+        <p style="color:red;"><?php if (isset($error)) {echo "<p class='text-danger'>Error: ".$error[0]."</p>";};?></p>
         <form method="post" action="handle_scopes">
         <div class="form-group">
         <label for="scopes_array">Approve permissions</label><br>

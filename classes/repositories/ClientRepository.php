@@ -43,7 +43,7 @@ class ClientRepository implements ClientRepositoryInterface
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$clientIdentifier, $grantType]);
         $row = $stmt->fetch();
-        if ($row == true && $clientSecret == $row["client_secret"]){
+        if ($row && $clientSecret == $row["client_secret"]){
             return true;
         } else {
             return false;

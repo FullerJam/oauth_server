@@ -1,39 +1,56 @@
 <?php
-
+use Psr\Http\Message\ResponseInterface as Response; //slim req & res interfaces
+use Psr\Http\Message\ServerRequestInterface as Request;
 // Include all the Slim dependencies. Composer creates an 'autoload.php' inside
 // the 'vendor' directory which will, in turn, include all required dependencies.
 require '../vendor/autoload.php';
+require_once '../Classes/Repositories/AccessTokenRepository.php';
 
+$config = [
+    'settings' => ['displayErrorDetails' => true],
+];
 
 // Create a new Slim App object. (v3 method)
-$app = new \Slim\App;
+$app = new \Slim\App($config);
+// php renderer object for phtml
 
-// $container = $app->getContainer();
+$container = $app->getContainer();
 
-$conn = new PDO("mysql:host=localhost;dbname=oauth2.0", "root", "");
-
-// $container['db'] = function () use ($conn) {
-//     return $conn;
-// };
-
-$publicKeyPath = '..\authorisation_server\public.key';
-
-// Setup the authorization server
-$server = new \League\OAuth2\Server\ResourceServer(
-    $accessTokenRepository,
-    $publicKeyPath
-);
+$container['db'] = function () {
+    $conn = new PDO('mysql:host=localhost;dbname=oauth2.0', 'root', '');
+    return $conn;
+};
 
 
-new \League\OAuth2\Server\Middleware\ResourceServerMiddleware($server);
+// Setup the resource server
+$container['server'] = function ($container) use($app) {
+    $db = $container->get('db');
+    $server = new \League\OAuth2\Server\ResourceServer(
+        $accessTokenRepository = new AccessTokenRepository($db),
+        $publicKeyPath = 'C:\xampp\htdocs\oauth\private\public.key'
+    );
+    return $server;
+};
+$server = $container->get('server');
+
+$app->add(new \League\OAuth2\Server\Middleware\ResourceServerMiddleware($server));
+// automatically validates request header
+// If the access token is valid the following attributes will be set on the ServerRequest:
+// oauth_access_token_id - the access token identifier
+// oauth_client_id - the client identifier
+// oauth_user_id - the user identifier represented by the access token
+// oauth_scopes - an array of string scope identifiers
+// If the authorization is invalid an instance of OAuthServerException::accessDenied will be thrown.
+
 
 // Setup up routes
-$app->get('/read', function ($req, $res, array $args) use($conn) {
-    return $res->withJson(["msg"=>'Read permissions route']);
+$app->post('/read', function ($request, $response, array $args) {
+
+    return $response->withJson(['msg' => 'Read permissions route'], 200);
 });
 
-$app->get('/readwrite', function ($req, $res, array $args) use($conn) {
-    return $res->withJson(["msg"=>'Read & Write permissions route']);
+$app->post('/readwrite', function ($request, $response, array $args)  {
+    return $response->withJson(['msg' => 'Read & Write permissions route'], 200);
 });
 
 // Run the application
