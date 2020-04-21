@@ -27,7 +27,7 @@ $container['server'] = function ($container) use($app) {
     $db = $container->get('db');
     $server = new \League\OAuth2\Server\ResourceServer(
         $accessTokenRepository = new AccessTokenRepository($db),
-        $publicKeyPath = 'C:\xampp\htdocs\oauth\private\public.key'
+        $publicKeyPath = 'C:\xampp\htdocs\oauth\oauth_server\authorisation_server\public.key'
     );
     return $server;
 };
@@ -45,8 +45,17 @@ $app->add(new \League\OAuth2\Server\Middleware\ResourceServerMiddleware($server)
 
 // Setup up routes
 $app->post('/read', function ($request, $response, array $args) {
+    try{
+        if(in_array("email", $request->getAttribute("scopes")))
+        $user_id = $_POST["oauth_user_id"];
+        $sql = "SELECT email FROM users WHERE id=?";
+        $ps = $this->db->prepare($sql);
+        $result = $ps->execute([$id]);
+        return $response->withJson(['email' => $result["email"]], 200);
+    }catch(\Exception $exception){
+        return $response->withJson(["msg"=>$e->getMessage()], 500);
+    }
 
-    return $response->withJson(['msg' => 'Read permissions route'], 200);
 });
 
 $app->post('/readwrite', function ($request, $response, array $args)  {
