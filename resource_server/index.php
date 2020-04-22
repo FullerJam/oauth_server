@@ -1,6 +1,8 @@
 <?php
+error_reporting(E_ALL & ~E_NOTICE); // ignore all notices, as was corrupting json responses with "public key permissions are not correct, recommend changing to 600 or 660 instead of 666. Would be a problem with real auth server but as this is a proof of concept just ignoring it. 
 use Psr\Http\Message\ResponseInterface as Response; //slim req & res interfaces
 use Psr\Http\Message\ServerRequestInterface as Request;
+use League\OAuth2\Server\CryptKey;
 // Include all the Slim dependencies. Composer creates an 'autoload.php' inside
 // the 'vendor' directory which will, in turn, include all required dependencies.
 require '../vendor/autoload.php';
@@ -22,12 +24,14 @@ $container['db'] = function () {
 };
 
 
+
 // Setup the resource server
 $container['server'] = function ($container) use($app) {
     $db = $container->get('db');
+    $publicKeyPath = new CryptKey('C:\xampp\htdocs\oauth\oauth_server\authorisation_server\public.key', null, false);
     $server = new \League\OAuth2\Server\ResourceServer(
         $accessTokenRepository = new AccessTokenRepository($db),
-        $publicKeyPath = 'C:\xampp\htdocs\oauth\oauth_server\authorisation_server\public.key'
+        $publicKeyPath
     );
     return $server;
 };
@@ -46,11 +50,12 @@ $app->add(new \League\OAuth2\Server\Middleware\ResourceServerMiddleware($server)
 // Setup up routes
 $app->post('/read', function ($request, $response, array $args) {
     try{
-        if(in_array("email", $request->getAttribute("scopes")))
-        $user_id = $_POST["oauth_user_id"];
+        if(in_array("email", $request->getAttribute("oauth_scopes")))
+        $user_id = $request->getAttribute("oauth_user_id");
         $sql = "SELECT email FROM users WHERE id=?";
         $ps = $this->db->prepare($sql);
-        $result = $ps->execute([$id]);
+        $ps->execute([$user_id]);
+        $result = $ps->fetch();
         return $response->withJson(['email' => $result["email"]], 200);
     }catch(\Exception $exception){
         return $response->withJson(["msg"=>$e->getMessage()], 500);
