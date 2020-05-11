@@ -72,7 +72,7 @@ $container['server'] = function ($container) {
             $refreshTokenRepository,
             new \DateInterval('PT10M')
         ),
-        new \DateInterval('PT1H')
+        new \DateInterval('PT8H')
     );
     return $server;
 };

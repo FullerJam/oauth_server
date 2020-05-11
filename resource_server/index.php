@@ -53,12 +53,15 @@ $app->post('/read', function ($request, $response, array $args) {
             $ps->execute([$user_id]);
             $result = $ps->fetch();
             return $response->withJson(['email' => $result["email"], 'username' => "James"], 200);
+        } else {
+            // throw new Exception('Something went wrong.');
         }
     } catch (\Exception $exception) {
         return $response->withJson(["msg" => $e->getMessage()], 500);
     }
 
 });
+openssl rsa -in private.key -pubout -out public.key
 
 $app->post('/get_messages', function ($request, $response, array $args) {
 
@@ -84,17 +87,19 @@ $app->post('/set_message', function ($request, $response, array $args) {
 
     try {
         if (in_array("email", $request->getAttribute("oauth_scopes"))) {
-            $message = $_POST['msgArray']; //message
-            $date = new DateTime(); // time
-            $user_id = $request->getAttribute("oauth_user_id"); //userId
-            $sql = "SELECT email FROM users WHERE id=?";
-            $ps = $this->db->prepare($sql);
-            $ps->execute([$user_id]);
-            $result = $ps->fetch();
+            $data = $req->getParsedBody(); //message
+            if ($message) { // if no message populated dont record the db entry
+                $date = new DateTime(); // time
+                $user_id = $request->getAttribute("oauth_user_id"); //userId
+                $sql = "SELECT email FROM users WHERE id=?";
+                $ps = $this->db->prepare($sql);
+                $ps->execute([$user_id]);
+                $result = $ps->fetch();
 
-            $sql2 = "INSERT INTO message_board (userId, email, time, message) VALUES ('?','?','?','?')";
-            $ps2 = $this->db->prepare($sql2);
-            $ps2->execute([$user_id, $result['email'], $date->getTimestamp(), $message[0]]);
+                $sql2 = "INSERT INTO message_board (userId, email, time, message) VALUES (?,?,?,?)";
+                $ps2 = $this->db->prepare($sql2);
+                $ps2->execute([$user_id, $result['email'], $date->getTimestamp(), $message]);
+            } 
         }
     } catch (\Exception $exception) {
         return $response->withJson(["msg" => $e->getMessage()], 500);
@@ -105,7 +110,7 @@ $app->post('/del_message', function ($request, $response, array $args) {
 
     try {
         if (in_array("email", $request->getAttribute("oauth_scopes"))) {
-           
+            $sql = "DELETE FROM message_board WHERE id=? AND time=?";
 
         }
     } catch (\Exception $exception) {
