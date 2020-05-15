@@ -21,7 +21,7 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
         $suppliedScopes = $accessTokenEntity->getScopes(); 
         $scopesArray = [];
         foreach ($suppliedScopes as $scope){
-            $scopesArray[] = $scope->getIdentifier(); // see token interface for gI()
+            $scopesArray[] = $scope->getIdentifier(); // see token interface for getIdentifier()
         }
 
         $scopesAsString = implode(" ", $scopesArray);      
@@ -29,7 +29,13 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
 
         $sql = "INSERT INTO access_tokens(access_token, token_expires, user_id, scope, client_id) VALUES (?,?,?,?,?)";
         $stmt = $this->db->prepare($sql); 
-        $stmt->execute([$accessTokenEntity->getIdentifier(), $accessTokenEntity->getExpiryDateTime()->format('Y-m-d H:i:s'), $accessTokenEntity->getUserIdentifier(), $scopesAsString, $accessTokenEntity->getClient()->getIdentifier()]);
+        $stmt->execute([
+            $accessTokenEntity->getIdentifier(), 
+            $accessTokenEntity->getExpiryDateTime()->format('Y-m-d H:i:s'), 
+            $accessTokenEntity->getUserIdentifier(), 
+            $scopesAsString, 
+            $accessTokenEntity->getClient()->getIdentifier()
+            ]);
     }
 
     /**
@@ -50,7 +56,7 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
         $sql = "SELECT is_revoked FROM access_tokens WHERE access_token=$tokenId";
         $stmt = $this->db->prepare($sql);
         $row = $stmt->fetch();
-        return $row["is_revoked"]; // revoked set to false as default
+        return $row["is_revoked"]; // revoked set to false as default in db
     }
 
     /**

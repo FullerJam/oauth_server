@@ -19,7 +19,11 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
         // Some logic to persist the refresh token in a database
         $sql = "INSERT INTO refresh_tokens(refresh_token, token_expires, access_tokens) VALUES (?,?,?)";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$refreshTokenEntity->getIdentifier(),$refreshTokenEntity->getExpiryDateTime()->format('Y-m-d H:i:s'),$refreshTokenEntity->getAccessToken()]);
+        $stmt->execute([
+            $refreshTokenEntity->getIdentifier(),
+            $refreshTokenEntity->getExpiryDateTime()->format('Y-m-d H:i:s'),
+            $refreshTokenEntity->getAccessToken()
+            ]);
     } // Recoverable fatal error: Object of class DateTimeImmutable could not be converted to string, https://www.php.net/manual/en/datetime.gettimestamp.php timestamp returns 0000-00-00 00:00:00 expiry time, tried https://www.php.net/manual/en/datetime.format.php. $refreshTokenEntity->getExpiryDateTime()->format('Y-m-d H:i:s') returned 0000-00-00 00:00:00 as well in token_expires
 
     /**

@@ -1,17 +1,16 @@
 <?php
-error_reporting(E_ALL & ~E_NOTICE); // ignore all notices, as was corrupting json responses with "public key permissions are not correct, recommend changing to 600 or 660 instead of 666. Would be a problem with real auth server but as this is a proof of concept just ignoring it. 
+// error_reporting(E_ALL & ~E_NOTICE); // ignore all notices, as was corrupting json responses with "public key permissions are not correct, recommend changing to 600 or 660 instead of 666. Would be a problem with real auth server but as this is a proof of concept just ignoring it. 
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\CryptKey;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\Grant\AuthCodeGrant;
 use Psr\Http\Message\ResponseInterface as Response; //slim req & res interfaces
 use Psr\Http\Message\ServerRequestInterface as Request;
-// Include all the Slim dependencies. Composer creates an 'autoload.php' inside
-// the 'vendor' directory which will, in turn, include all required dependencies.
+require '../vendor/autoload.php';
+// Include all the Slim dependencies. Composer creates an 'autoload.php' inside the 'vendor' directory which will, in turn, include all required dependencies.
 
 session_start(); // was using session start incorrectly? think i only need to declare once as i couldnt get past authorizescopes route
 
-require '../vendor/autoload.php';
 require_once '../Classes/Repositories/ClientRepository.php';
 require_once '../Classes/Repositories/AccessTokenRepository.php';
 require_once '../Classes/Repositories/ScopeRepository.php';
@@ -158,7 +157,7 @@ $app->post('/login', function (Request $request, Response $response, array $args
         $row = $ps->fetch(); // find user that matches posted credentials
 
         if ($row != false) { //if email exists
-            if (password_verify($pwd, $row["password"])) { // ttps://www.php.net/manual/en/function.password-verify.php
+            if (password_verify($pwd, $row["password"])) { // https://www.php.net/manual/en/function.password-verify.php
                 $_SESSION["logged_in_user"] = $row["id"]; // set authorised user session variable equal to id so it can be used in UserEntity class
                 return $response->withRedirect($this->router->pathFor('scopeAuthorisation'));
             } else {

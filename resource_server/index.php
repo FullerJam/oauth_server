@@ -61,7 +61,7 @@ $app->post('/read', function ($request, $response, array $args) {
     }
 
 });
-openssl rsa -in private.key -pubout -out public.key
+
 
 $app->post('/get_messages', function ($request, $response, array $args) {
 
@@ -87,7 +87,8 @@ $app->post('/set_message', function ($request, $response, array $args) {
 
     try {
         if (in_array("email", $request->getAttribute("oauth_scopes"))) {
-            $data = $req->getParsedBody(); //message
+            $postData = $req->getParsedBody(); //message
+            $message = $postData["message"];
             if ($message) { // if no message populated dont record the db entry
                 $date = new DateTime(); // time
                 $user_id = $request->getAttribute("oauth_user_id"); //userId
@@ -95,7 +96,6 @@ $app->post('/set_message', function ($request, $response, array $args) {
                 $ps = $this->db->prepare($sql);
                 $ps->execute([$user_id]);
                 $result = $ps->fetch();
-
                 $sql2 = "INSERT INTO message_board (userId, email, time, message) VALUES (?,?,?,?)";
                 $ps2 = $this->db->prepare($sql2);
                 $ps2->execute([$user_id, $result['email'], $date->getTimestamp(), $message]);

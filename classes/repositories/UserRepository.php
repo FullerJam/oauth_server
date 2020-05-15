@@ -19,12 +19,13 @@ class UserRepository implements UserRepositoryInterface
         $stmt = $this->db->prepare($sql);
         $row = $stmt->execute([$username,$grantType]);
 
-        if ($row && $row["password" == $password]) {
-            return new UserEntity($row["id"]);//pass id for getIdentifier() in UE
-        } else {
-            null;
-        }
-
-        return;
+        if ($row && password_verify($password, $row["password"])) {
+            return new UserEntity($row["id"]);//pass id for getIdentifier() in UEI
+        } 
+        
+        return null;
+        
+        //https://www.php.net/manual/en/pdostatement.bindparam.php  use like operator as grant types may not always match exactly?
+        
     }
 }

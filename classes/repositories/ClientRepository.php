@@ -2,7 +2,7 @@
 
 
 use League\OAuth2\Server\Repositories\ClientRepositoryInterface;
-// use League\OAuth2\Server\Entities\ClientEntity; //commented out, preventing error where slim couldnt find ClientEntity..
+// use League\OAuth2\Server\Entities\ClientEntity; //commented out, preventing error where slim couldnt find ClientEntity.. CRI uses use League\OAuth2\Server\Entities\ClientEntityInterface; anyway
 
 class ClientRepository implements ClientRepositoryInterface
 {
@@ -48,7 +48,9 @@ class ClientRepository implements ClientRepositoryInterface
         } else {
             return false;
         }
-      
+      //https://www.php.net/manual/en/pdostatement.bindparam.php  use like operator as grant types may not always match exactly?
+
+
         // Check if client is registered
     //     if (\array_key_exists($clientIdentifier, $clients) === false) {
     //         return false;
