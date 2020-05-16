@@ -75,23 +75,7 @@ $container['server'] = function ($container) {
     );
     return $server;
 };
-// $grant->setRefreshTokenTTL(new \DateInterval('PT1H')); // refresh tokens will expire after 1 hour
-
-//client requests an access token
-$app->post('/access_token', function (Request $request, Response $response, array $args) {
-    try {
-        // Try to respond to the request
-        $this->server->respondToAccessTokenRequest($request, $response);
-    } catch (\League\OAuth2\Server\Exception\OAuthServerException $exception) {
-        // All instances of OAuthServerException can be formatted into a HTTP response
-        return $exception->generateHttpResponse($response);
-    } catch (\Exception $exception) {
-        // Unknown exception
-        $body = new Stream(fopen('php://temp', 'r+'));
-        $body->write($exception->getMessage());
-        return $response->withStatus(500)->withBody($body);
-    }
-})->setName('accessToken');
+// $grant->setRefreshTokenTTL(new \DateInterval('PT1H')); // refresh tokens will expire after 8 hours
 
 //client redirects the user to an authorization endpoint
 $app->get('/authorize', function (Request $request, Response $response, array $args) {
@@ -143,6 +127,24 @@ $app->get('/authorize', function (Request $request, Response $response, array $a
 
     }
 })->setName('authorise');
+
+//client requests an access token
+$app->post('/access_token', function (Request $request, Response $response, array $args) {
+    try {
+        // Try to respond to the request
+        $this->server->respondToAccessTokenRequest($request, $response);
+    } catch (\League\OAuth2\Server\Exception\OAuthServerException $exception) {
+        // All instances of OAuthServerException can be formatted into a HTTP response
+        return $exception->generateHttpResponse($response);
+    } catch (\Exception $exception) {
+        // Unknown exception
+        $body = new Stream(fopen('php://temp', 'r+'));
+        $body->write($exception->getMessage());
+        return $response->withStatus(500)->withBody($body);
+    }
+})->setName('accessToken');
+
+
 
 $app->post('/login', function (Request $request, Response $response, array $args) {
 
