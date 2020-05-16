@@ -1,5 +1,5 @@
 <?php
-// error_reporting(E_ALL & ~E_NOTICE); // ignore all notices, as was corrupting json responses with "public key permissions are not correct, recommend changing to 600 or 660 instead of 666. Would be a problem with real auth server but as this is a proof of concept just ignoring it. 
+// error_reporting(E_ALL & ~E_NOTICE); // ignore all notices, as was corrupting json responses with "public key permissions are not correct, recommend changing to 600 or 660 instead of 666. Would be a problem with real auth server but as this is a proof of concept just ignoring it.
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\CryptKey;
 use League\OAuth2\Server\Exception\OAuthServerException;
@@ -144,8 +144,6 @@ $app->post('/access_token', function (Request $request, Response $response, arra
     }
 })->setName('accessToken');
 
-
-
 $app->post('/login', function (Request $request, Response $response, array $args) {
 
     try {
@@ -176,22 +174,31 @@ $app->post('/login', function (Request $request, Response $response, array $args
 })->setName('login');
 
 $app->get('/scope_authorisation', function (Request $request, Response $response, array $args) {
-    if (!isset($_SESSION["logged_in_user"])) { //if user has not logged in redirect to login view else..
-        $response = $this->view->render($response, 'login.phtml');
-        return $response;
-    } else {
-        $sql = "SELECT name FROM oauth_clients where id=?";
-        $ps = $this->db->prepare($sql); //ps preparedstatement
-        $clientId = $_SESSION["oauth_qp"]["client_id"];
-        $ps->execute([$clientId]);
-        $row = $ps->fetch();
-        $_SESSION["clientApplication"] = $row;
+    try {
+        if (!isset($_SESSION["logged_in_user"])) { //if user has not logged in redirect to login view else..
+            $queryParams = http_build_query($_SESSION["oauth_qp"]);
+            return $response->withRedirect($this->router->pathFor('authorise'). "?$queryParams");
+        } else {
+            $sql = "SELECT name FROM oauth_clients where id=?";
+            $ps = $this->db->prepare($sql); //ps preparedstatement
+            $clientId = $_SESSION["oauth_qp"]["client_id"];
+            $ps->execute([$clientId]);
+            $row = $ps->fetch();
+            $_SESSION["clientApplication"] = $row;
 
-        // retrieve client application name & save to session for View message
-        //real Oauth server would use Scopes session variable to set requested scopes from client in scope_auth view. just a demo
-        $newScopeRepository = new ScopeRepository($this->db);
-        $allScopes = $newScopeRepository->returnAllScopes();
-        $this->view->render($response, "scope_auth.phtml", array('allScopes' => $allScopes)); //render accepts array as an argument. did incorrectly http://www.slimframework.com/docs/v2/view/rendering.html
+            // retrieve client application name & save to session for View message
+            //real Oauth server would use Scopes session variable to set requested scopes from client in scope_auth view. just a demo
+            $newScopeRepository = new ScopeRepository($this->db);
+            $allScopes = $newScopeRepository->returnAllScopes();
+            $this->view->render($response, "scope_auth.phtml", array('allScopes' => $allScopes)); //render accepts array as an argument. did incorrectly http://www.slimframework.com/docs/v2/view/rendering.html
+        }
+    } catch (\Exception $exception) {
+
+        // Unknown exception
+        $body = new Stream(fopen('php://temp', 'r+'));
+        $body->write($exception->getMessage());
+        return $response->withStatus(500)->withBody($body);
+
     }
 
 })->setName('scopeAuthorisation');
@@ -209,7 +216,7 @@ $app->post('/handle_scopes', function (Request $request, Response $response, arr
         return $response->withRedirect($this->router->pathFor('authorise') . "?$queryParams");
     } else {
         $error = ["You need to atleast authorise read access to use this service"];
-        $newScopeRepository = new ScopeRepository($this->db);
+        $newScopeRepository = new ScopeRepository();
         $allScopes = $newScopeRepository->returnAllScopes();
         $this->view->render($response, "scope_auth.phtml", array('allScopes' => $allScopes, 'error' => $error));
         // return $response->withRedirect($this->router->pathFor('scopeAuthorisation')); // changed out for $view->render as I wasnt passing $error
