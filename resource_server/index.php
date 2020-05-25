@@ -1,7 +1,10 @@
 <?php
-error_reporting(E_ALL & ~E_NOTICE); // ignore all notices, as was corrupting json responses with "public key permissions are not correct, recommend changing to 600 or 660 instead of 666. Would be a problem with real auth server but as this is a proof of concept just ignoring it.
-use League\OAuth2\Server\CryptKey; //slim req & res interfaces
+use League\OAuth2\Server\CryptKey; 
+use League\OAuth2\Server\ResourceServer;
+//slim req & res interfaces
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
+
 // Include all the Slim dependencies. Composer creates an 'autoload.php' inside
 // the 'vendor' directory which will, in turn, include all required dependencies.
 require '../vendor/autoload.php';
@@ -46,7 +49,7 @@ $app->add(new \League\OAuth2\Server\Middleware\ResourceServerMiddleware($server)
 // Setup up routes
 $app->post('/read', function ($request, $response, array $args) {
     try {
-        if (in_array("email", $request->getAttribute("oauth_scopes"))) {
+        if (in_array("read", $request->getAttribute("oauth_scopes"))) {
             $user_id = $request->getAttribute("oauth_user_id");
             $sql = "SELECT email FROM users WHERE id=?";
             $ps = $this->db->prepare($sql);
@@ -54,10 +57,10 @@ $app->post('/read', function ($request, $response, array $args) {
             $result = $ps->fetch();
             return $response->withJson(['email' => $result["email"], 'username' => "James"], 200);
         } else {
-            // throw new Exception('Something went wrong.');
+            throw new Exception('Something went wrong, check approved scopes.');
         }
     } catch (\Exception $exception) {
-        return $response->withJson(["msg" => $e->getMessage()], 500);
+        return $response->withJson(["msg" => $e->getMessage()]);
     }
 
 });

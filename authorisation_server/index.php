@@ -71,7 +71,7 @@ $container['server'] = function ($container) {
             $refreshTokenRepository,
             new \DateInterval('PT10M')
         ),
-        new \DateInterval('PT8H')
+        new \DateInterval('PT1M')
     );
     return $server;
 };
@@ -204,7 +204,7 @@ $app->get('/scope_authorisation', function (Request $request, Response $response
 })->setName('scopeAuthorisation');
 
 $app->post('/handle_scopes', function (Request $request, Response $response, array $args) {
-    if (isset($_SESSION["logged_in_user"]) && ($_POST["ApproveScopes"] == "true")) { //check that user has atleast provided write permission & is logged in
+    if (isset($_SESSION["logged_in_user"]) && ($_POST["ApproveScopes"] == "true") && isset($_POST["scopes"])) { //check that user has atleast provided write permission & is logged in
         $scopesArray = $_POST["scopes"];
 
         $_SESSION['authorised_user'] = $_SESSION["logged_in_user"]; // set user as authorised
@@ -216,7 +216,7 @@ $app->post('/handle_scopes', function (Request $request, Response $response, arr
         return $response->withRedirect($this->router->pathFor('authorise') . "?$queryParams");
     } else {
         $error = ["You need to atleast authorise read access to use this service"];
-        $newScopeRepository = new ScopeRepository();
+        $newScopeRepository = new ScopeRepository($this->db);
         $allScopes = $newScopeRepository->returnAllScopes();
         $this->view->render($response, "scope_auth.phtml", array('allScopes' => $allScopes, 'error' => $error));
         // return $response->withRedirect($this->router->pathFor('scopeAuthorisation')); // changed out for $view->render as I wasnt passing $error
@@ -226,8 +226,4 @@ $app->post('/handle_scopes', function (Request $request, Response $response, arr
 // Run the application
 $app->run();
 
-// $_SESSION["res_type"] = $queryParams["response_type"];
-//         $_SESSION["client_id"] = $queryParams["client_id"];
-//         $_SESSION["redirect_uri"] = $queryParams["redirect_uri"];
-//         $_SESSION["scope"] = $queryParams["scope"];
-//         $_SESSION["state"] = $queryParams["state"];
+
