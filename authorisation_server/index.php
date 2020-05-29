@@ -17,7 +17,7 @@ require_once '../Classes/Repositories/ScopeRepository.php';
 require_once '../Classes/Repositories/AuthCodeRepository.php';
 require_once '../Classes/Repositories/RefreshTokenRepository.php'; // not needed
 require_once '../Classes/Entities/ClientEntity.php';
-require_once '../classes/Entities/UserEntity.php';
+require_once '../Classes/Entities/UserEntity.php';
 require_once '../Classes/Entities/AccessTokenEntity.php';
 require_once '../Classes/Entities/ScopeEntity.php';
 require_once '../Classes/Entities/AuthCodeEntity.php';
@@ -71,7 +71,7 @@ $container['server'] = function ($container) {
             $refreshTokenRepository,
             new \DateInterval('PT10M')
         ),
-        new \DateInterval('PT1M')
+        new \DateInterval('PT1H')
     );
     return $server;
 };

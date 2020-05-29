@@ -55,7 +55,7 @@ $app->post('/read', function ($request, $response, array $args) {
             $ps = $this->db->prepare($sql);
             $ps->execute([$user_id]);
             $result = $ps->fetch();
-            return $response->withJson(['email' => $result["email"], 'username' => "James"], 200);
+            return $response->withJson(['email' => $result["email"], 'username' => "username"], 200);
         } else {
             throw new Exception('Something went wrong, check approved scopes.');
         }
@@ -77,7 +77,7 @@ $app->post('/get_messages', function ($request, $response, array $args) {
             if (count($rows) < 1) {
                 return $response->withJson(["msg" => "No messages to display"], 204);
             } else {
-                return $response->withJson($rows);
+                return $result->withJson([$rows], 200);
             }
             // return $response->withJson(['id' => $result["id"], 'email' => $result['email'], 'time' => $result['time'], 'message' => $result['message']], 200);
         }
@@ -89,21 +89,29 @@ $app->post('/get_messages', function ($request, $response, array $args) {
 $app->post('/set_message', function ($request, $response, array $args) {
 
     try {
-        if (in_array("email", $request->getAttribute("oauth_scopes"))) {
-            $postData = $req->getParsedBody(); //message
+        if (in_array("read", $request->getAttribute("oauth_scopes"))) {
+            $postData = $request->getParsedBody(); //message
             $message = $postData["message"];
-            if ($message) { // if no message populated dont record the db entry
-                $date = new DateTime(); // time
-                $user_id = $request->getAttribute("oauth_user_id"); //userId
-                $sql = "SELECT email FROM users WHERE id=?";
-                $ps = $this->db->prepare($sql);
-                $ps->execute([$user_id]);
-                $result = $ps->fetch();
-                $sql2 = "INSERT INTO message_board (userId, email, time, message) VALUES (?,?,?,?)";
-                $ps2 = $this->db->prepare($sql2);
-                $ps2->execute([$user_id, $result['email'], $date->getTimestamp(), $message]);
-            } 
+            // if ($message) { // if no message populated dont record the db entry
+            //     $date = new DateTime(); // time
+            //     $user_id = $request->getAttribute("oauth_user_id"); //userId
+            //     // $sql = "SELECT email FROM users WHERE id=?";
+            //     // $ps = $this->db->prepare($sql);
+            //     // $ps->execute([$user_id]);
+            //     // $result = $ps->fetch();
+            //     // $sql2 = "INSERT INTO message_board (userId, email, time, message) VALUES (?,?,?,?)";
+            //     // $ps2 = $this->db->prepare($sql2);
+            //     // $ps2->execute([$user_id, $result['email'], $date->getTimestamp(), $message]);
+            //     return $response->withJson(["msg" => $message, "userId" => $user_id], 200);
+            // } else {
+            //     return $response->withJson(["msg" => "You must provide a message"], 400);
+            //     // throw new Exception("You must provide a message");
+            // }
+            return $response->withJson(["msg" => $message], 200);
+        } else {
+            return $response->withJson(["msg" => "else statement"], 200);
         }
+        
     } catch (\Exception $exception) {
         return $response->withJson(["msg" => $e->getMessage()], 500);
     }
